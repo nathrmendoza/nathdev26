@@ -1,0 +1,129 @@
+/* ------------------------------------------------------------------ *
+ * dither.css
+ *
+ * Shared plumbing for the dither-kit components: the pieces that can't be
+ * expressed as Tailwind utility classes (generated canvases, pseudo-element
+ * rails, keyframes). Everything else -- layout, spacing, colour choices --
+ * is applied via Tailwind classes on the components themselves.
+ * ------------------------------------------------------------------ */
+
+/* Any host element that owns a DitherSurface needs a positioning context.
+   `isolation` keeps the canvas's stacking context local so it can't slide
+   over something else on the page. */
+.dither-host,
+.dither-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* The canvas the surface creates. `pointer-events: none` matters -- without
+   it the canvas swallows the hover on the element underneath and the effect
+   flickers as the pointer crosses it. */
+.dither-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Content sits above the canvas. */
+.dither-btn-label {
+  position: relative;
+  z-index: 1;
+  display: block;
+  transition: color 0.18s ease 0.06s;
+}
+
+/* Form dissolve veil: bleeds 1px past the host so it fully covers the edge. */
+.dither-veil {
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  z-index: 5;
+}
+
+/* Label flips to the ground colour once the fill is in. The small delay lets
+   the dither get most of the way across before the text changes, which reads
+   better than flipping on the first frame. */
+.dither-btn.is-on .dither-btn-label {
+  color: var(--dither-inverted, #0d0f10);
+}
+
+/* Scramble link: unresolved characters are dimmed so the resolve reads as
+   things coming into focus rather than glyphs randomly changing. */
+.dither-scramble {
+  display: inline-block;
+  white-space: pre;
+  text-decoration: none;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+/* Unresolved character while scrambling -- shared by ScrambleLink and
+   ScrambleReveal, not scoped to .dither-scramble's own layout, since
+   ScrambleReveal renders in whatever font its heading uses. */
+i[data-off] {
+  color: var(--dither-dim, #9ca199);
+}
+
+/* Contact form field: a 2px accent rail that wipes down the left edge on
+   focus and turns warm on a failed validation. No canvas -- texture behind
+   live text fights legibility, so this stays a plain CSS transform. */
+.dither-field {
+  position: relative;
+}
+
+.dither-field::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--dither-accent, #6fd3c4);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1), background-color 0.18s;
+}
+
+.dither-field.is-focus::before {
+  transform: scaleY(1);
+}
+
+.dither-field.is-bad::before {
+  transform: scaleY(1);
+  background: var(--dither-warn, #d98c6a);
+}
+
+.dither-field.is-shake {
+  animation: dither-shake 0.3s ease;
+}
+
+@keyframes dither-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dither-btn-label {
+    transition: none;
+  }
+  .dither-field.is-shake {
+    animation: none;
+  }
+  .dither-field::before {
+    transition: none;
+  }
+}

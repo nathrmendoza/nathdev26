@@ -14,7 +14,8 @@
  * Use a monospace face -- proportional type jitters as glyphs resolve.
  */
 
-import { useCallback, useEffect, useRef, type AnchorHTMLAttributes } from 'react';
+import { useCallback, useEffect, useRef, type AnchorHTMLAttributes, type MouseEvent } from 'react';
+import { useInternalLinkClick } from '@/lib/useInternalLinkClick';
 
 const GLYPHS = '#%&$@*+=~/\\|<>[]{}';
 const BITS = 5;
@@ -39,8 +40,12 @@ export default function ScrambleLink({
   hold = 190,
   speed = 14,
   className = '',
+  href,
+  onClick,
+  target,
   ...rest
 }: ScrambleLinkProps) {
+  const internalClick = useInternalLinkClick(href, target);
   const ref = useRef<HTMLAnchorElement>(null);
   const cells = useRef<{ el: HTMLElement; ch: string; th: number }[]>([]);
   const state = useRef({ prog: 1, targ: 1, running: false, prev: 0, timer: 0 });
@@ -111,13 +116,21 @@ export default function ScrambleLink({
     state.current.timer = window.setTimeout(() => run(1), reduced ? 0 : hold);
   }, [run, hold]);
 
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    onClick?.(e);
+    internalClick(e);
+  };
+
   return (
     <a
       ref={ref}
       data-dither-mask
+      href={href}
+      target={target}
       className={`dither-scramble ${className}`.trim()}
       onPointerEnter={kick}
       onFocus={kick}
+      onClick={handleClick}
       {...rest}
     >
       {text}

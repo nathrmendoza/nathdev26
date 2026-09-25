@@ -6,9 +6,8 @@
  * A button whose fill dithers in radially from the exact point the cursor
  * crossed the border, landing on a completely solid background.
  *
- * Set `fill` below 1 for a secondary button that holds a permanent half-tone
- * instead of going solid -- the screen-door texture is what marks it as
- * secondary, so you don't need a lighter colour.
+ * Set `invert` for the secondary variant: starts fully filled and dissolves
+ * away on hover instead -- the mirror image of the default direction.
  */
 
 import { useEffect, useRef, type ButtonHTMLAttributes } from 'react';
@@ -21,6 +20,8 @@ export interface DitherButtonProps extends ButtonHTMLAttributes<HTMLButtonElemen
   rgb?: RGB;
   /** Label colour once the fill is in. Ignored when fill < 1. */
   invertedColor?: string;
+  /** Secondary variant: starts filled, dissolves away on hover. */
+  invert?: boolean;
 }
 
 export default function DitherButton({
@@ -29,6 +30,7 @@ export default function DitherButton({
   mode = 'radial',
   rgb = [217, 220, 214],
   invertedColor = '#0d0f10',
+  invert = false,
   className = '',
   ...rest
 }: DitherButtonProps) {
@@ -50,20 +52,29 @@ export default function DitherButton({
     });
     surfaceRef.current = s;
 
+    if (invert) {
+      s.progress = 1;
+      s.target = 1;
+      s.render();
+    }
+
+    const restTarget = invert ? 1 : 0;
+    const activeTarget = invert ? 0 : 1;
+
     const enter = (e: PointerEvent) => {
-      s.to(1, localOrigin(el, e));
+      s.to(activeTarget, localOrigin(el, e));
       el.classList.add('is-on');
     };
     const leave = (e: PointerEvent) => {
-      s.to(0, localOrigin(el, e));
+      s.to(restTarget, localOrigin(el, e));
       el.classList.remove('is-on');
     };
     const focus = () => {
-      s.to(1, { x: 0.5, y: 0.5 });
+      s.to(activeTarget, { x: 0.5, y: 0.5 });
       el.classList.add('is-on');
     };
     const blur = () => {
-      s.to(0);
+      s.to(restTarget);
       el.classList.remove('is-on');
     };
 
@@ -87,7 +98,7 @@ export default function DitherButton({
     <button
       ref={ref}
       data-dither-mask
-      className={`dither-btn ${className}`.trim()}
+      className={`dither-btn ${invert ? 'is-inverted' : ''} ${className}`.trim()}
       style={fill >= 1 ? ({ ['--dither-inverted' as string]: invertedColor }) : undefined}
       {...rest}
     >

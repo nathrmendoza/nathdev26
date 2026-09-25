@@ -9,6 +9,7 @@ import DitherBackground, {
   type DitherBackgroundConfig,
 } from "@/components/DitherBackground";
 import SplashCurtain from "@/components/SplashCurtain";
+import Header from "@/components/Header";
 import CommandPalette, { type Command, type Route } from "@/components/CommandPalette";
 import { useDitherControlsUnlocked } from "@/lib/useDitherControlsUnlock";
 
@@ -28,9 +29,12 @@ const DitherControls = dynamic(() => import("@/components/DitherControls"), {
   ssr: false,
 });
 
-// Pages the command palette's `cd` can reach.
+// Pages the command palette's `cd` can reach -- kept in sync with Header's nav.
 const ROUTES: Route[] = [
   { name: "home", path: "/" },
+  { name: "works", path: "/works" },
+  { name: "gallery", path: "/gallery" },
+  { name: "contact", path: "/contact" },
   { name: "styles", path: "/styles" },
 ];
 
@@ -100,6 +104,7 @@ export default function App({ Component, pageProps }: AppProps) {
         />
       )}
       <CommandPalette commands={COMMANDS} routes={ROUTES} user="nath" />
+      <Header />
       {/* key={router.asPath} forces a remount per route, so the fade-in animation replays. */}
       <div key={router.asPath} className="relative z-1 motion-safe:animate-fade-in">
         <Component {...pageProps} />

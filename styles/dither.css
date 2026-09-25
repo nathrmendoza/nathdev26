@@ -31,11 +31,19 @@
   z-index: 0;
 }
 
+/* Visible at rest, not just once the fill lands -- otherwise there's nothing
+   to see until you hover it. */
+.dither-btn {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 0.125rem;
+}
+
 /* Content sits above the canvas. */
 .dither-btn-label {
   position: relative;
   z-index: 1;
   display: block;
+  color: #d9dcd6;
   transition: color 0.18s ease 0.06s;
 }
 
@@ -52,6 +60,17 @@
    better than flipping on the first frame. */
 .dither-btn.is-on .dither-btn-label {
   color: var(--dither-inverted, #0d0f10);
+}
+
+/* Secondary/inverted button: starts filled, so the label starts dark to
+   match, then flips light as hover dissolves the fill away -- the reverse
+   of the primary button above. */
+.dither-btn.is-inverted .dither-btn-label {
+  color: #0d0f10;
+}
+
+.dither-btn.is-inverted.is-on .dither-btn-label {
+  color: #d9dcd6;
 }
 
 /* Scramble link: unresolved characters are dimmed so the resolve reads as

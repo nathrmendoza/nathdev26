@@ -6,9 +6,6 @@ import Marquee from "@/components/Marquee";
 import ScrambleReveal from "@/components/ScrambleReveal";
 import DigitCounter from "@/components/DigitCounter";
 import DitherImage from "@/components/DitherImage";
-import type { RGB } from "@/lib/dither-surface";
-
-const ACCENT_RGB: RGB = [111, 211, 196];
 
 // Placeholder data -- swap in the real grouping/levels before shipping.
 interface Skill {
@@ -161,9 +158,6 @@ export default function StyleGuidePage() {
             </p>
           </Row>
           <Row>
-            <a href="#">This is a link</a>
-          </Row>
-          <Row>
             <p>
               <strong>This is bold text.</strong>
             </p>
@@ -229,25 +223,8 @@ export default function StyleGuidePage() {
             <DitherButton className="px-5 py-3.5 text-[11px] tracking-[0.14em] uppercase">
               Primary action
             </DitherButton>
-            <DitherButton
-              fill={0.44}
-              className="border border-line px-5 py-3.5 text-[11px] tracking-[0.14em] uppercase"
-            >
+            <DitherButton invert className="px-5 py-3.5 text-[11px] tracking-[0.14em] uppercase">
               Secondary action
-            </DitherButton>
-            <DitherButton
-              mode="linear"
-              fill={0.34}
-              rgb={ACCENT_RGB}
-              className="group inline-flex items-center gap-2 px-5 py-3.5 text-[11px] tracking-[0.14em] text-accent uppercase"
-            >
-              Read more
-              <span
-                aria-hidden
-                className="inline-block transition-transform duration-300 group-hover:translate-x-1"
-              >
-                &rarr;
-              </span>
             </DitherButton>
           </div>
 

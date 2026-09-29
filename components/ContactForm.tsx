@@ -14,10 +14,12 @@ import DitherButton from './DitherButton';
 
 const GROUND: RGB = [13, 15, 16];
 
-type FieldKey = 'name' | 'email' | 'message';
+type FieldKey = 'name' | 'email' | 'phone' | 'subject' | 'message';
+// Phone is the one optional field -- email already covers "how to reach you".
+const OPTIONAL_FIELDS: FieldKey[] = ['phone'];
 
-const EMPTY_VALUES: Record<FieldKey, string> = { name: '', email: '', message: '' };
-const EMPTY_ERRORS: Record<FieldKey, string> = { name: '', email: '', message: '' };
+const EMPTY_VALUES: Record<FieldKey, string> = { name: '', email: '', phone: '', subject: '', message: '' };
+const EMPTY_ERRORS: Record<FieldKey, string> = { name: '', email: '', phone: '', subject: '', message: '' };
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -67,6 +69,8 @@ export default function ContactForm() {
   const fieldRefs = useRef<Record<FieldKey, HTMLDivElement | null>>({
     name: null,
     email: null,
+    phone: null,
+    subject: null,
     message: null,
   });
 
@@ -111,9 +115,11 @@ export default function ContactForm() {
     (Object.keys(values) as FieldKey[]).forEach((key) => {
       const v = values[key].trim();
       if (!v) {
-        next[key] = 'Required';
-        ok = false;
-        shake(key);
+        if (!OPTIONAL_FIELDS.includes(key)) {
+          next[key] = 'Required';
+          ok = false;
+          shake(key);
+        }
         return;
       }
       if (key === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
@@ -203,9 +209,54 @@ export default function ContactForm() {
 
           <Field
             fieldRef={(el) => {
+              fieldRefs.current.phone = el;
+            }}
+            label="Phone (optional)"
+            htmlFor="cf-phone"
+            error={errors.phone}
+            isFocus={focused === 'phone'}
+          >
+            <input
+              id="cf-phone"
+              name="phone"
+              type="tel"
+              placeholder="021 234 5678"
+              autoComplete="tel"
+              value={values.phone}
+              onChange={(e) => handleInput('phone', e.target.value)}
+              onFocus={() => setFocused('phone')}
+              onBlur={() => setFocused((f) => (f === 'phone' ? null : f))}
+              className="w-full border-0 bg-transparent p-0 font-mono text-[13px] text-ink placeholder:text-ink-faint focus:outline-none"
+            />
+          </Field>
+
+          <Field
+            fieldRef={(el) => {
+              fieldRefs.current.subject = el;
+            }}
+            label="Subject"
+            htmlFor="cf-subject"
+            error={errors.subject}
+            isFocus={focused === 'subject'}
+          >
+            <input
+              id="cf-subject"
+              name="subject"
+              type="text"
+              placeholder="What's this about?"
+              value={values.subject}
+              onChange={(e) => handleInput('subject', e.target.value)}
+              onFocus={() => setFocused('subject')}
+              onBlur={() => setFocused((f) => (f === 'subject' ? null : f))}
+              className="w-full border-0 bg-transparent p-0 font-mono text-[13px] text-ink placeholder:text-ink-faint focus:outline-none"
+            />
+          </Field>
+
+          <Field
+            fieldRef={(el) => {
               fieldRefs.current.message = el;
             }}
-            label="Project"
+            label="Message"
             htmlFor="cf-message"
             error={errors.message}
             isFocus={focused === 'message'}

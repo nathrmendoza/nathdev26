@@ -46,10 +46,16 @@ module.exports = {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        // Small amplitude on purpose -- the hero's scroll cue, not a UI toy.
+        bounceSoft: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(6px)' },
+        },
       },
       animation: {
         marquee: 'marquee 60s linear infinite',
         'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'bounce-soft': 'bounceSoft 2.2s ease-in-out infinite',
       },
     },
   },

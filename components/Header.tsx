@@ -27,6 +27,7 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useInternalLinkClick } from '@/lib/useInternalLinkClick';
+import MobileNavDial from '@/components/MobileNavDial';
 
 const GLYPHS = '#%&$@*+=~/\\|<>[]{}';
 const LOGO = ['N', 'D', 'E', 'V'];
@@ -218,7 +219,7 @@ function NavGroup({
   }, [start, items, reverse]);
 
   return (
-    <nav aria-label={ariaLabel} className="flex items-center gap-8 sm:gap-12">
+    <nav aria-label={ariaLabel} className="hidden items-center gap-8 sm:flex sm:gap-12">
       {items.map((item, i) => (
         <NavAnchor
           key={item.href}
@@ -247,6 +248,19 @@ export default function Header() {
       window.setTimeout(() => setNavOn(true), reduced ? 0 : NAV_START),
     ];
     return () => timers.forEach((t) => window.clearTimeout(t));
+  }, []);
+
+  useEffect(() => {
+    // Published so full-viewport sections (Hero) can size themselves to
+    // exactly the space left below the header instead of guessing its
+    // height, which shifts with the responsive padding and fluid type scale.
+    const el = headerRef.current;
+    if (!el) return;
+    const publish = () => document.documentElement.style.setProperty('--header-h', `${el.offsetHeight}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -316,6 +330,8 @@ export default function Header() {
       </Link>
 
       <NavGroup items={RIGHT_NAV} reverse={false} start={navOn} pathname={pathname} ariaLabel="Secondary" />
+
+      <MobileNavDial />
     </header>
   );
 }

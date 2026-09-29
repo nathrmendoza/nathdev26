@@ -10,6 +10,7 @@ import DitherBackground, {
 } from "@/components/DitherBackground";
 import SplashCurtain from "@/components/SplashCurtain";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import CommandPalette, { type Command, type Route } from "@/components/CommandPalette";
 import { useDitherControlsUnlocked } from "@/lib/useDitherControlsUnlock";
 
@@ -109,6 +110,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <div key={router.asPath} className="relative z-1 motion-safe:animate-fade-in">
         <Component {...pageProps} />
       </div>
+      <Footer />
     </div>
   );
 }

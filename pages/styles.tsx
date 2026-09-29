@@ -379,7 +379,7 @@ export default function StyleGuidePage() {
 
         {/* ===================== SKILLS ===================== */}
         <section className="mt-4 mb-20">
-          <h2 className="mb-2">Skills / Knowledge</h2>
+          <h2 className="mb-2">Services</h2>
           <p className="mb-6 max-w-2xl">
             Name and its dots sit together as one unit, several per line, wrapping naturally.
             Filled dots for how far it goes, outlined for the rest -- quieter than a blocky HUD
@@ -389,22 +389,22 @@ export default function StyleGuidePage() {
           </p>
 
           <div className="mb-10 flex flex-wrap items-start gap-3">
-            <div className="flex w-full max-w-md flex-wrap items-center gap-2 rounded-sm border border-line bg-transparent px-3 py-2 focus-within:border-line-lit">
+            <div className="flex w-full max-w-md flex-wrap items-center gap-2 rounded-sm border border-ink bg-black/15 px-3 py-2 focus-within:border-ink">
               {skillTags.map((term) => {
                 const found = ALL_SKILLS.some((s) => s.name.toLowerCase().includes(term.toLowerCase()));
                 return (
                   <span
                     key={term}
-                    className={`flex items-center gap-1.5 rounded-sm border px-2 py-1 font-mono text-[11px] uppercase ${
-                      found ? "border-accent/50 text-accent" : "border-warn/50 text-warn"
+                    className={`flex items-center gap-1.5 rounded-sm border py-1 pl-2.5 font-mono text-[11px] font-medium uppercase text-ink ${
+                      found ? "border-accent/60 bg-accent/25" : "border-warn/60 bg-warn/25"
                     }`}
                   >
-                    {found ? "✓" : "✕"} {term}
+                    {term}
                     <button
                       type="button"
                       onClick={() => removeSkillTag(term)}
                       aria-label={`Remove ${term}`}
-                      className="opacity-70 hover:opacity-100"
+                      className="flex h-5 w-5 items-center justify-center rounded-full text-[15px] font-bold leading-none text-ink/70 transition-colors hover:bg-ink/15 hover:text-ink"
                     >
                       ×
                     </button>
@@ -417,7 +417,7 @@ export default function StyleGuidePage() {
                 onChange={(e) => handleSkillDraftChange(e.target.value)}
                 onKeyDown={handleSkillDraftKeyDown}
                 placeholder={skillTags.length === 0 ? "Search skills -- e.g. PHP, Laravel, C#" : "Add another..."}
-                className="min-w-[8ch] flex-1 bg-transparent py-1 font-mono text-[12px] text-ink placeholder:text-ink-faint focus:outline-none"
+                className="min-w-[8ch] flex-1 bg-transparent py-1 font-mono text-[12px] text-ink placeholder:text-ink focus:outline-none"
               />
             </div>
             {(skillTags.length > 0 || skillDraft) && (
@@ -457,7 +457,7 @@ export default function StyleGuidePage() {
                           <span
                             className={`font-mono text-[12px] whitespace-nowrap transition-colors duration-300 ${
                               spotlight ? "text-accent" : "text-ink"
-                            }`}
+                       }`}
                           >
                             {skill.name}
                           </span>

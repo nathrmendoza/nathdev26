@@ -59,24 +59,24 @@ export interface DitherBackgroundConfig {
 
 export const DEFAULT_CONFIG: DitherBackgroundConfig = {
   pixelSize: 3,
-  matrix: 8,
+  matrix: 4,
   levels: 4,
   dither: 0.7,
   scale: 1.4,
   warp: 3.2,
   octaves: 6,
-  speed: 0.35,
+  speed: 0.2,
   ambientLow: 0.06,
   ambientHigh: 1,
-  cursorRadius: 0.25,
-  cursorLift: 0.32,
-  cursorEase: 0.09,
+  cursorRadius: 0.07,
+  cursorLift: 0.39,
+  cursorEase: 0.35,
   cursorFadeSpeed: 6,
   pulseDuration: 2,
   pulseWidth: 0.6,
   pulseLift: 0.13,
   ground: '#000000',
-  peak: '#7d8783',
+  peak: '#505855',
 };
 
 const VERT = `#version 300 es

@@ -173,7 +173,7 @@ export default function Skills() {
               onChange={(e) => handleSkillDraftChange(e.target.value)}
               onKeyDown={handleSkillDraftKeyDown}
               placeholder={skillTags.length === 0 ? 'Search skills — e.g. PHP, Laravel, C#' : 'Add another...'}
-              className="min-w-[8ch] flex-1 bg-transparent py-1 font-mono text-[12px] text-ink placeholder:text-ink focus:outline-none"
+              className="min-w-[8ch] flex-1 bg-transparent py-1 font-mono text-[16px] text-ink placeholder:text-ink sm:text-[12px] focus:outline-none"
             />
           </div>
           {(skillTags.length > 0 || skillDraft) && (

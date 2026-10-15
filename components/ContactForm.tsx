@@ -202,7 +202,7 @@ export default function ContactForm() {
               onChange={(e) => handleInput('name', e.target.value)}
               onFocus={() => setFocused('name')}
               onBlur={() => setFocused((f) => (f === 'name' ? null : f))}
-              className="w-full border-0 bg-transparent p-0 font-mono text-[13px] text-ink placeholder:text-ink-faint focus:outline-none"
+              className="w-full border-0 bg-transparent p-0 font-mono text-[16px] text-ink sm:text-[13px] placeholder:text-ink-faint focus:outline-none"
             />
           </Field>
 
@@ -225,7 +225,7 @@ export default function ContactForm() {
               onChange={(e) => handleInput('email', e.target.value)}
               onFocus={() => setFocused('email')}
               onBlur={() => setFocused((f) => (f === 'email' ? null : f))}
-              className="w-full border-0 bg-transparent p-0 font-mono text-[13px] text-ink placeholder:text-ink-faint focus:outline-none"
+              className="w-full border-0 bg-transparent p-0 font-mono text-[16px] text-ink sm:text-[13px] placeholder:text-ink-faint focus:outline-none"
             />
           </Field>
 
@@ -248,7 +248,7 @@ export default function ContactForm() {
               onChange={(e) => handleInput('phone', e.target.value)}
               onFocus={() => setFocused('phone')}
               onBlur={() => setFocused((f) => (f === 'phone' ? null : f))}
-              className="w-full border-0 bg-transparent p-0 font-mono text-[13px] text-ink placeholder:text-ink-faint focus:outline-none"
+              className="w-full border-0 bg-transparent p-0 font-mono text-[16px] text-ink sm:text-[13px] placeholder:text-ink-faint focus:outline-none"
             />
           </Field>
 
@@ -270,7 +270,7 @@ export default function ContactForm() {
               onChange={(e) => handleInput('subject', e.target.value)}
               onFocus={() => setFocused('subject')}
               onBlur={() => setFocused((f) => (f === 'subject' ? null : f))}
-              className="w-full border-0 bg-transparent p-0 font-mono text-[13px] text-ink placeholder:text-ink-faint focus:outline-none"
+              className="w-full border-0 bg-transparent p-0 font-mono text-[16px] text-ink sm:text-[13px] placeholder:text-ink-faint focus:outline-none"
             />
           </Field>
 
@@ -291,7 +291,7 @@ export default function ContactForm() {
               onChange={(e) => handleInput('message', e.target.value)}
               onFocus={() => setFocused('message')}
               onBlur={() => setFocused((f) => (f === 'message' ? null : f))}
-              className="min-h-[68px] w-full resize-none border-0 bg-transparent p-0 font-mono text-[13px] leading-[1.55] text-ink placeholder:text-ink-faint focus:outline-none"
+              className="min-h-[68px] w-full resize-none border-0 bg-transparent p-0 font-mono text-[16px] leading-[1.55] text-ink sm:text-[13px] placeholder:text-ink-faint focus:outline-none"
             />
           </Field>
 

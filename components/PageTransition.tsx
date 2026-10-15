@@ -1,31 +1,5 @@
 'use client';
 
-/**
- * PageTransition.tsx
- *
- * Route changes dissolve the current page out to transparent, swap, then
- * dissolve the next one in -- ContactForm's mask treatment at page scale,
- * so the live background shows through mid-transition rather than a solid
- * block. Header, footer, and background sit outside this and stay put.
- *
- * The router hands _app the next page as soon as its data is ready; this
- * holds the outgoing page on screen until its exit has played, then swaps.
- * Because of that, links never need to know about the transition -- except
- * that they must navigate with `scroll: false` (see useInternalLinkClick).
- * Next's own scroll-to-top would otherwise jerk the outgoing page to the
- * top mid-dissolve, so scrolling happens here instead, at the swap: to the
- * top on a fresh navigation (or the #section, for a `/#id` link), back to
- * where you were on back/forward.
- *
- * Navigating again mid-exit doesn't queue anything: the swap just lands on
- * whichever route is newest. Navigating back to the page still on screen
- * cancels the exit outright.
- *
- * The mask covers only the viewport (frame: 'viewport'), so the cost is the
- * same on a page one screen tall or ten. First load is the SplashCurtain's
- * job; this only plays on client-side changes.
- */
-
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import type { AppProps } from 'next/app';
@@ -33,8 +7,7 @@ import { DitherSurface } from '@/lib/dither-surface';
 import { getLenis } from '@/lib/lenis';
 
 const OUT_MS = 250;
-// Easing rates (see DitherSurface `speed`), picked so each phase is ~95%
-// done at its target duration: ln(20) / seconds.
+// Easing rates: ln(20) / seconds, so each phase is ~95% done on time.
 const OUT_SPEED = 12; // ~250ms
 const IN_SPEED = 7.5; // ~400ms
 
@@ -72,8 +45,7 @@ export default function PageTransition({ Component, pageProps }: Pick<AppProps, 
     });
     surfaceRef.current = surface;
 
-    // Scroll restoration is handled at the swap below; the browser's own
-    // would jump the outgoing page the moment back/forward is pressed.
+    // Scroll is restored at the swap; the browser's own would jump the outgoing page.
     const prevRestoration = history.scrollRestoration;
     history.scrollRestoration = 'manual';
     const onPop = () => {
@@ -90,7 +62,6 @@ export default function PageTransition({ Component, pageProps }: Pick<AppProps, 
     };
   }, []);
 
-  // Route changed: start the exit, or cancel it if we're back where we started.
   useEffect(() => {
     latest.current = { Component, pageProps, key: routeKey };
     const host = hostRef.current;
@@ -111,14 +82,12 @@ export default function PageTransition({ Component, pageProps }: Pick<AppProps, 
     // Already on the way out -- the swap reads `latest`, so just let it run.
     if (exitTimer.current) return;
 
-    // The outgoing page is on its way out; don't let it take another click.
     if (host) host.style.pointerEvents = 'none';
     surface?.set({ speed: OUT_SPEED });
     surface?.to(1);
     exitTimer.current = window.setTimeout(() => {
       exitTimer.current = 0;
-      // Saved here, before the swap -- once a shorter page is in, the browser
-      // has already clamped scrollY to fit it.
+      // Saved before the swap -- a shorter incoming page would clamp scrollY.
       scrollPositions.current.set(prevKey.current, window.scrollY);
       setShown(latest.current);
     }, reducedMotion() ? 0 : OUT_MS);
@@ -151,8 +120,7 @@ export default function PageTransition({ Component, pageProps }: Pick<AppProps, 
     surfaceRef.current?.to(0);
   }, [shown.key]);
 
-  // Same route re-rendered (fresh props, or an exit just got cancelled):
-  // render what the router has now rather than the held copy.
+  // Same route (fresh props, or a cancelled exit): render the router's current page.
   const page = routeKey === shown.key ? { Component, pageProps, key: routeKey } : shown;
 
   return (

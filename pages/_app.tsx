@@ -33,17 +33,16 @@ const DitherControls = dynamic(() => import("@/components/DitherControls"), {
   ssr: false,
 });
 
-// Pages the command palette's `cd` can reach -- kept in sync with Header's nav.
+// Pages the command palette's `cd` can reach. Empty hides `cd` entirely --
+// hidden for launch (one-pager); restore these when the pages are back.
 const ROUTES: Route[] = [
-  { name: "home", path: "/" },
-  // Hidden for launch (one-pager) -- the pages 404 until they're back:
+  // { name: "home", path: "/" },
   // { name: "works", path: "/works" },
   // { name: "gallery", path: "/gallery" },
   // { name: "contact", path: "/contact" },
-  { name: "styles", path: "/styles" },
+  // { name: "styles", path: "/styles" },
 ];
 
-// Placeholders -- Work/Contact pages and the GitHub/LinkedIn URLs need swapping in.
 const COMMANDS: Command[] = [
   {
     id: "cp-email",
@@ -64,14 +63,14 @@ const COMMANDS: Command[] = [
     alias: "gh",
     description: "open github",
     feedback: "Opening github...",
-    run: () => window.open("https://github.com", "_blank", "noopener,noreferrer"),
+    run: () => window.open("https://github.com/nathrmendoza", "_blank", "noopener,noreferrer"),
   },
   {
     id: "linkedin",
     alias: "linkedin",
     description: "open linkedin",
     feedback: "Opening linkedin...",
-    run: () => window.open("https://linkedin.com", "_blank", "noopener,noreferrer"),
+    run: () => window.open("https://www.linkedin.com/in/nathaniel-mendoza-425203163/", "_blank", "noopener,noreferrer"),
   },
   {
     id: "whoami",
@@ -86,14 +85,13 @@ const COMMANDS: Command[] = [
     description: "...worth a shot",
     feedback: "Permission granted. Scrolling to contact...",
     run: () => {
-      // Off the homepage (e.g. /styles), go there -- PageTransition lands on the section.
+      // Off the homepage, PageTransition lands on the section.
       if (!scrollToId("contact")) Router.push("/#contact", undefined, { scroll: false });
     },
   },
 ];
 
-// Lives here, not in a page, so the background config and the command
-// palette's state persist across every route instead of remounting.
+// Here, not in a page, so background and palette state survive route changes.
 export default function App({ Component, pageProps }: AppProps) {
   const [config, setConfig] = useState<DitherBackgroundConfig>(DEFAULT_CONFIG);
   const [pulseSignal, setPulseSignal] = useState(0);
@@ -110,8 +108,7 @@ export default function App({ Component, pageProps }: AppProps) {
           onFirePulse={() => setPulseSignal((n) => n + 1)}
         />
       )}
-      {/* Desktop only -- the terminal assumes a keyboard. lg, not sm: its hint
-          needs the footer's empty left column, which only exists from lg. */}
+      {/* Keyboard-only; lg+ because its hint sits in the footer's left column. */}
       <CommandPalette commands={COMMANDS} routes={ROUTES} user="nath" className="hidden lg:block" />
       <Header />
       <PageTransition Component={Component} pageProps={pageProps} />

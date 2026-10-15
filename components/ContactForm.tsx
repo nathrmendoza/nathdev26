@@ -1,18 +1,5 @@
 'use client';
 
-/**
- * ContactForm.tsx
- *
- * Inputs stay plain -- dither texture behind live text fights legibility.
- * Once /api/contact confirms the send, the form dissolves out to
- * transparent (noise-ordered, mode 'dissolve', applied as a mask so the live
- * background shows through rather than a solid block), content swaps, then
- * the new content dissolves in through the same surface. A failed send never dissolves -- the form and
- * everything typed into it stay put, with the error under the fields.
- *
- * Validation rules live in lib/contact-schema.ts, shared with the API route.
- */
-
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { DitherSurface } from '@/lib/dither-surface';
 import DitherButton from './DitherButton';
@@ -146,7 +133,7 @@ export default function ContactForm() {
       });
       data = await res.json();
     } catch {
-      data = { ok: false, error: 'Couldn’t reach the server -- check your connection and try again.' };
+      data = { ok: false, error: 'Couldn’t reach the server — check your connection and try again.' };
     }
     setSending(false);
 
@@ -182,7 +169,7 @@ export default function ContactForm() {
     <div ref={shellRef} data-dither-mask className="dither-host relative">
       {!submitted && (
         <form onSubmit={handleSubmit} noValidate className="grid">
-          {/* Honeypot -- off-screen and out of the tab order, so only bots fill it. */}
+          {/* Honeypot: hidden from people, so only bots fill it. */}
           <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
             <label htmlFor="cf-website">Website</label>
             <input
@@ -308,7 +295,7 @@ export default function ContactForm() {
             />
           </Field>
 
-          <div className="flex flex-wrap items-center justify-between gap-3.5 border-t border-line pt-4">
+          <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-3 border-t border-line pt-4">
             {sendError ? (
               <span role="alert" className="text-[10px] tracking-wide text-warn">
                 {sendError}

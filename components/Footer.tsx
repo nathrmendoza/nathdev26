@@ -1,24 +1,5 @@
 'use client';
 
-/**
- * Footer.tsx
- *
- * One straight line, then a single row: identity, local time and location
- * centred and dot-separated, contact icons on the right. Mounted once in _app.tsx so it doesn't
- * remount per route. (Back-to-top used to sit at the end of the icon row;
- * it's BackToTop now, pinned to the viewport in the same spot.)
- *
- * Plays its entrance once, the first time it scrolls into view (not on
- * mount, unlike Header): the divider line grows in from the left, then the
- * left text sweeps left to right with the same glitch-resolve character
- * effect as Header's nav, while the right icons fade/slide in with the same
- * stagger Header uses for its logo letters.
- *
- * The text sweep is driven entirely by a `tick` counter re-rendered through
- * normal state (not imperative DOM refs, unlike Header) -- a character's
- * visual state is a pure function of its position against the current tick.
- */
-
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { GithubIcon, LinkedinIcon, MailIcon } from '@/components/icons';
 
@@ -44,12 +25,8 @@ function offsetsFor(labels: string[]) {
   return { offsets, total };
 }
 
-/** Ticks from 0 to `totalChars * 2` once `active`: the first half is the
- *  growth pass (each position starts glitching), the second half resolve
- *  (each position settles), matching Header's two-phase sweep timing.
- *  Driven by elapsed wall-clock time via rAF rather than counting fixed
- *  setInterval firings, so the total duration holds even if individual
- *  frames drift or get delayed under load. */
+/** 0 -> totalChars*2: first half glitches each position in, second half
+ *  resolves it. Wall-clock driven, so the duration holds under load. */
 function useSweepTick(active: boolean, totalChars: number) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -75,9 +52,6 @@ function useSweepTick(active: boolean, totalChars: number) {
   return tick;
 }
 
-/** A label's characters, each resolving from noise to real text as `tick`
- *  sweeps past its position (`charOffset`) in the group's combined
- *  left-to-right sequence. */
 function SweepChars({
   label,
   charOffset,
@@ -105,9 +79,6 @@ function SweepChars({
   );
 }
 
-/** Fades an icon in with the same slide-up + stagger Header uses for its
- *  logo letters -- icons don't have characters to glitch-sweep, so they get
- *  a simpler entrance instead of racing the left text's sweep. */
 function IconReveal({ on, index, children }: { on: boolean; index: number; children: ReactNode }) {
   return (
     <span
@@ -131,20 +102,16 @@ const LEFT_LABELS = ['Nathan — Web Developer', 'Christchurch based'];
 // The live clock sits between the two labels, dot-separated.
 const CLOCK_INDEX = 1;
 
-// Placeholders -- swap in the real GitHub/LinkedIn URLs before shipping.
 const SOCIAL_LINKS: SocialLink[] = [
-  { label: 'GitHub', href: 'https://github.com', Icon: GithubIcon },
-  { label: 'LinkedIn', href: 'https://linkedin.com', Icon: LinkedinIcon },
+  { label: 'GitHub', href: 'https://github.com/nathrmendoza', Icon: GithubIcon },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/nathaniel-mendoza-425203163/', Icon: LinkedinIcon },
   { label: 'Email', href: 'mailto:nathmendoza.dev@gmail.com', Icon: MailIcon },
 ];
 
-// Same length as a real formatNZTime() result -- rendered on both server and
-// client's first pass so hydration matches; the real time only exists
-// client-side (server and client would compute different seconds otherwise).
+// Same length as formatNZTime() output, so SSR and the first client render match.
 const CLOCK_PLACEHOLDER = '00:00:00 NZT';
 
-// Fixed-length format (2-digit H/M/S + a 3-letter zone) so the entrance's
-// character count never mismatches once the clock starts ticking live.
+// Fixed length, so the sweep's character count never changes.
 function formatNZTime(d: Date) {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Pacific/Auckland',
@@ -200,8 +167,7 @@ export default function Footer() {
   }, [leftDone]);
 
   useEffect(() => {
-    // Published like Header's --header-h, so pages meant to fit one screen
-    // can size to 100vh minus both instead of overflowing by the footer.
+    // Like --header-h, for layouts sized to one screen.
     const el = rootRef.current;
     if (!el) return;
     const publish = () =>
@@ -220,12 +186,8 @@ export default function Footer() {
         }`}
       />
 
-      {/* lg+: three columns, text truly centred. The empty left one is where
-          CommandPalette's fixed hint lands at the bottom of the page; the
-          icons' lg:pr-10 (gap-6 + the h-4 arrow) keeps the slot BackToTop
-          lands in clear. Everything centres on the same line: pb-6 + half
-          the h-4 icons, which is where the hint and arrow are pinned too.
-          Below lg: stacked and centred, no hint, arrow off to the right. */}
+      {/* lg+: the empty left column is where CommandPalette's hint lands;
+          lg:pr-10 keeps BackToTop's slot clear. */}
       <div className="mt-6 flex flex-col items-center gap-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
         <div aria-hidden="true" className="hidden lg:block" />
 

@@ -41,5 +41,5 @@ yarn-error.log*
 next-env.d.ts
 
 /dither-kit
-# original screenshots -- npm run images writes the optimised copies to public/works
+# original images -- npm run images writes optimised copies to public/images
 /images/

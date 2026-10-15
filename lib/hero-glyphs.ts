@@ -1,17 +1,6 @@
-/**
- * hero-glyphs.ts
- *
- * Turns the baked glyph outlines in data/hero-glyphs.json into extrudable
- * THREE.Shape objects. The JSON was generated once, offline, by decoding
- * the real Archivo variable font woff2 (cached locally by next/font) with
- * opentype.js -- not shipped at runtime, so there's no font-parsing cost
- * or extra bundle weight here, just the outline coordinates themselves.
- *
- * Font coordinates are Y-down from the baseline (SVG/canvas convention);
- * Three.js is Y-up, so every Y gets negated on the way in.
- */
-
 import { Path, Shape } from 'three';
+// Outlines baked offline from Archivo with opentype.js -- hero copy is limited
+// to the characters in this file.
 import glyphData from './data/hero-glyphs.json';
 
 type Command = readonly [string, ...number[]];
@@ -26,10 +15,8 @@ const GLYPHS = data.glyphs;
 
 export const HERO_UNITS_PER_EM = data.unitsPerEm;
 
-/** A glyph can be several subpaths (holes for letters like A/D/O) -- the
- *  first is the outer contour, every subpath after it is a hole. Three.js's
- *  earcut triangulation only needs the winding to be *consistent*, not a
- *  specific direction, so this split is all that's required. */
+/** First subpath is the outer contour, the rest are holes. earcut only needs
+ *  consistent winding, so this split is enough. */
 function buildShape(commands: Command[]): Shape {
   const shape = new Shape();
   let target: Shape | Path = shape;
@@ -72,11 +59,8 @@ export interface LaidOutLine {
   width: number;
 }
 
-/** Lays out a line of (already-known, no kerning) glyphs left to right.
- *  Unsupported characters are skipped -- keep hero copy to the baked set.
- *  Space is keyed as 'space' in the data (a literal ' ' key doesn't survive
- *  JSON round-tripping cleanly) and has no outline, so it only ever
- *  advances the cursor -- never becomes a mesh. */
+/** Lays out baked glyphs left to right (no kerning); unknown characters are
+ *  skipped. Space is keyed 'space' and only advances. */
 export function layoutLine(text: string): LaidOutLine {
   let cursor = 0;
   const glyphs: LaidOutGlyph[] = [];

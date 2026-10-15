@@ -1,15 +1,5 @@
 'use client';
 
-/**
- * Skills.tsx
- *
- * Tag-search over the stack: type a term (or paste a whole requirements
- * list) and matches light up while everything else dims in place -- nothing
- * resizes or gets removed, so the section never shifts height while
- * searching. See pages/styles.tsx for the original prototype this was
- * lifted from.
- */
-
 import { useMemo, useState, type KeyboardEvent } from 'react';
 
 interface Skill {
@@ -19,19 +9,19 @@ interface Skill {
 
 const SKILL_MAX = 5;
 
-// Placeholder data -- swap in the real grouping/levels before shipping.
 const SKILL_GROUPS: { label: string; skills: Skill[] }[] = [
   {
     label: 'Markup & Styling',
     skills: [
       { name: 'HTML', level: 5 },
+      { name: 'PHP', level: 5 },
+      { name: 'Liquid', level: 5 },
+      { name: 'Twig', level: 5 },
       { name: 'CSS', level: 5 },
       { name: 'Sass', level: 5 },
       { name: 'Tailwind CSS', level: 5 },
       { name: 'Styled Components', level: 4 },
       { name: 'Bootstrap', level: 3 },
-      { name: 'Liquid', level: 3 },
-      { name: 'PHP', level: 3 },
       { name: 'Laravel', level: 3 },
     ],
   },
@@ -41,30 +31,38 @@ const SKILL_GROUPS: { label: string; skills: Skill[] }[] = [
       { name: 'JavaScript', level: 5 },
       { name: 'React', level: 5 },
       { name: 'Next.js', level: 5 },
-      { name: 'TypeScript', level: 4 },
+      { name: 'TypeScript', level: 5 },
+      { name: 'jQuery', level: 5 },
       { name: 'Vite', level: 4 },
-      { name: 'Redux', level: 3 },
-      { name: 'jQuery', level: 3 },
-      { name: 'Webpack', level: 3 },
-      { name: 'Remix.js', level: 2 },
-      { name: 'Gulp.js', level: 2 },
+      { name: 'Webpack', level: 4 },
+      { name: 'Gulp.js', level: 4 },
+      { name: 'Remix.js', level: 3 },
     ],
   },
   {
-    label: 'Platforms & Tools',
+    label: 'CMS Platforms',
+    skills: [
+      { name: 'Craft CMS', level: 5 },
+      { name: 'WordPress', level: 4 },
+      { name: 'Shopify', level: 4 },
+      { name: 'Silverstripe', level: 3 },
+      { name: 'Sanity', level: 3 },
+    ]
+  },
+  {
+    label: 'Other Tools',
     skills: [
       { name: 'Git', level: 5 },
       { name: 'GitHub', level: 5 },
+      { name: 'Bitbucket', level: 5 },
+      { name: 'Jira', level: 5 },
+      { name: 'Asana', level: 5 },
+      { name: 'Trello', level: 5 },
+      { name: 'Adobe Photoshop', level: 4 },
       { name: 'Figma', level: 4 },
-      { name: 'WordPress', level: 4 },
-      { name: 'Shopify', level: 3 },
-      { name: 'Bitbucket', level: 3 },
-      { name: 'Sanity', level: 3 },
-      { name: 'Adobe Photoshop', level: 3 },
-      { name: 'Adobe XD', level: 3 },
-      { name: 'Craft CMS', level: 2 },
-      { name: 'Silverstripe', level: 2 },
-      { name: 'Joomla', level: 2 },
+      { name: 'Adobe XD', level: 4 },
+      { name: 'Google Tag Manager', level: 3},
+      { name: 'Google Analytics', level: 3}
     ],
   },
 ];
@@ -109,8 +107,7 @@ export default function Skills() {
     setSkillDraft('');
   };
 
-  // Typing or pasting a comma commits everything before it as a tag, live --
-  // covers both "type a term, hit enter" and "paste a whole requirements list".
+  // A comma commits everything before it as a tag -- handles pasted lists too.
   const handleSkillDraftChange = (value: string) => {
     if (value.includes(',')) {
       const parts = value.split(',');
@@ -131,8 +128,7 @@ export default function Skills() {
     }
   };
 
-  // The in-progress draft counts as a live term too, so filtering updates as
-  // you type -- enter just locks it in as a tag and starts the next one.
+  // The in-progress draft filters live too.
   const skillTerms = useMemo(
     () => [...skillTags, skillDraft].map((t) => t.trim().toLowerCase()).filter(Boolean),
     [skillTags, skillDraft]
@@ -146,7 +142,7 @@ export default function Skills() {
     <section id="stack" className="px-6 py-32 sm:px-12 sm:py-40">
       <div className="mx-auto max-w-4xl">
         <h2 className="mb-2">Tech Stack</h2>
-        <p className="mb-10 max-w-xl text-ink-dim">Search whatever&rsquo;s in the job spec -- matches light up.</p>
+        <p className="mb-10 max-w-xl text-ink-dim">Search whatever&rsquo;s in the job spec — matches light up.</p>
 
         <div className="mb-10 flex flex-wrap items-start gap-3">
           <div className="flex w-full max-w-md flex-wrap items-center gap-2 rounded-sm border border-ink bg-black/15 px-3 py-2 focus-within:border-ink">
@@ -176,7 +172,7 @@ export default function Skills() {
               value={skillDraft}
               onChange={(e) => handleSkillDraftChange(e.target.value)}
               onKeyDown={handleSkillDraftKeyDown}
-              placeholder={skillTags.length === 0 ? 'Search skills -- e.g. PHP, Laravel, C#' : 'Add another...'}
+              placeholder={skillTags.length === 0 ? 'Search skills — e.g. PHP, Laravel, C#' : 'Add another...'}
               className="min-w-[8ch] flex-1 bg-transparent py-1 font-mono text-[12px] text-ink placeholder:text-ink focus:outline-none"
             />
           </div>
@@ -232,7 +228,7 @@ export default function Skills() {
         </div>
 
         {isSearchingSkills && !hasAnySkillMatch && (
-          <p className="mt-6 font-mono text-[12px] text-ink-faint">No matches -- not in the current stack (yet).</p>
+          <p className="mt-6 font-mono text-[12px] text-ink-faint">No matches — not in the current stack (yet).</p>
         )}
       </div>
     </section>

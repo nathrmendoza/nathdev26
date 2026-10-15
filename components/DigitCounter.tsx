@@ -1,14 +1,5 @@
 'use client';
 
-/**
- * DigitCounter.tsx
- *
- * A real incrementing count, 0 up to the target, zero-padded to the
- * target's own digit width for the whole count (100 counts 000, 001, ...
- * 100, not growing from 1 digit to 3). Eased, not linear. Triggers on
- * scroll-into-view via IntersectionObserver, not hover.
- */
-
 import { useCallback, useEffect, useRef } from 'react';
 
 function easeOutCubic(t: number): number {
@@ -19,8 +10,7 @@ export interface DigitCounterProps {
   value: number;
   prefix?: string;
   suffix?: string;
-  /** Zero-pads to at least this many digits. Defaults to the target value's
-   *  own digit count, so the width is fixed for the whole count. */
+  /** Zero-pad width. Defaults to the target's digit count. */
   minDigits?: number;
   /** Seconds for the count to settle. */
   duration?: number;

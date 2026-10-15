@@ -1,16 +1,5 @@
 'use client';
 
-/**
- * ScrambleReveal.tsx
- *
- * ScrambleLink's ordered character scramble, generalised from a hover
- * trigger to scroll-into-view. Same bit-reversal sequence (see
- * ScrambleLink for why the ordering matters), not copy-shared.
- *
- * Prefer mono text -- Archivo is proportional, so substituting glyphs of
- * different widths jitters the layout slightly during resolve.
- */
-
 import { useCallback, useEffect, useRef } from 'react';
 
 const GLYPHS = '#%&$@*+=~/\\|<>[]{}';
@@ -50,7 +39,6 @@ export default function ScrambleReveal({
   const cells = useRef<{ el: HTMLElement; ch: string; th: number }[]>([]);
   const state = useRef({ prog: 0, targ: 0, running: false, prev: 0 });
 
-  // Build one span per character, each already showing noise.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;

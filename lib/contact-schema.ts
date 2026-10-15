@@ -1,15 +1,3 @@
-/**
- * contact-schema.ts
- *
- * One set of rules for the contact form, shared by ContactForm (instant
- * feedback) and /api/contact (the check that actually counts -- anyone can
- * skip the browser and POST straight to the route).
- *
- * Messages are written to be shown as-is under the field. Check order
- * matters: the form shows the first issue per field, so 'Required' sits
- * before any format check.
- */
-
 import { z } from 'zod';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

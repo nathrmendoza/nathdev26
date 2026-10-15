@@ -1,11 +1,3 @@
-/**
- * icons.tsx
- *
- * Small inline SVG icons shared across components (Footer's social row,
- * the Contact page's "connect through" link, ...) -- plain functions, not
- * files, so they inherit currentColor/sizing from whatever wraps them.
- */
-
 export function GithubIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

@@ -7,13 +7,7 @@
   --background: #0d0f10;
   --foreground: #d9dcd6;
 
-  /* Fluid root scale: rem-based sizing (type, spacing, layout via Tailwind's
-     default spacing scale) grows and shrinks together as one unit with
-     viewport width, instead of each token capping independently. Anchored
-     at 1x = 16px at 1440px -- roughly where this kit's been visually tuned,
-     so nothing shifts at that width. Flat below 1024 (mobile gets its own
-     layout, not a continuation of this curve) and flat above 2560 (iMac 27"
-     / 5K), so an ultrawide or TV gets more page, not oversized text. */
+  /* Fluid root: 1rem = 16px at 1440px, flat below 1024px and above 2560px. */
   font-size: clamp(11.378px, 1.1111vw, 28.444px);
 
   --fs-h1: 4rem;
@@ -40,12 +34,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Base typography -- so plain semantic HTML (h1..h6, p, a, ...) already
-   looks right without needing utility classes on every element. Colour
-   values are the literal palette from tailwind.config.js, not var(...):
-   Tailwind's JS-config bridge inlines theme colours into each utility
-   rather than exposing them as CSS custom properties, so there's nothing
-   to reference here -- see the style guide at /styles for the swatches. */
+/* Base typography. Literal hex, not var(): the JS Tailwind config doesn't
+   expose its colours as CSS variables. */
 @layer base {
   h1,
   h2,

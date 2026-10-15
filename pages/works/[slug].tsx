@@ -10,9 +10,7 @@ interface Props {
 
 export default function WorkDetailPage({ project }: Props) {
   return (
-    // Fills exactly the space between header and footer, content centred --
-    // so a project whose media fits on one screen doesn't scroll at all.
-    // Taller media just grows the section and scrolls as normal.
+    // Fills the space between header and footer, so short media doesn't scroll.
     <section className="flex min-h-[calc(100vh-var(--header-h,96px)-var(--footer-h,0px))] items-center px-6 py-10 sm:px-12">
       <div className="mx-auto grid w-full max-w-6xl gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-20">
         <div className="lg:sticky lg:top-32 lg:h-fit">
@@ -55,8 +53,7 @@ export default function WorkDetailPage({ project }: Props) {
   );
 }
 
-// Hidden for launch (one-pager): every project 404s. Set false to bring
-// them back, along with the Works links in Header NAV_ITEMS and _app ROUTES.
+// Hidden for launch: every project 404s. Set false to restore.
 const HIDDEN = true;
 
 export const getStaticPaths: GetStaticPaths = () => ({

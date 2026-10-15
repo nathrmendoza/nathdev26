@@ -1,23 +1,5 @@
 'use client';
 
-/**
- * Experience.tsx
- *
- * Work history as a scroll-filled timeline: the spine draws in sync with
- * scroll position through the section instead of sitting fully revealed on
- * load. Each dot lights up, and its entry fades/slides in, the moment the
- * fill reaches it -- driven by the same progress value, not separate
- * per-entry triggers, so the line and the reveals never fall out of sync.
- *
- * Chronological, oldest first, so scrolling down = moving forward in time,
- * arriving at the most recent role at the bottom. Past that, the spine
- * continues as a dashed, fading tail -- the story isn't finished.
- *
- * Alternates sides on wider screens to use the section's full width (single
- * column on mobile, where there isn't room for that). Entries sit centered
- * on a single shared spine either way.
- */
-
 import { useEffect, useRef, useState } from 'react';
 import DigitCounter from '@/components/DigitCounter';
 
@@ -29,12 +11,11 @@ interface ExperienceEntry {
 
 const EARLIEST_YEAR = 2019;
 
-// Real history -- keep in sync with the old site if it changes there.
 const ENTRIES: ExperienceEntry[] = [
   {
     startYear: 2019,
     endYear: 2021,
-    text: 'Front-end developer at Optimind Technology Solutions -- websites and other digital collateral for clients in the Asia.',
+    text: 'Front-end developer at Optimind Technology Solutions — built websites and other digital collateral for clients across Asia.',
   },
   {
     startYear: 2021,
@@ -44,7 +25,7 @@ const ENTRIES: ExperienceEntry[] = [
   {
     startYear: 2024,
     endYear: 2026,
-    text: 'Web Developer at Imagic Creative Agency, Christchurch -- building and maintaining websites for clients across New Zealand.',
+    text: 'Web Developer at Imagic Creative Agency, Christchurch — building and maintaining websites for clients across New Zealand.',
   },
 ];
 
@@ -67,12 +48,7 @@ export default function Experience() {
       return () => window.clearTimeout(id);
     }
 
-    // Absolute document-space scrollY thresholds, not viewport-relative --
-    // computed once (and on resize), then compared against scrollY directly.
-    // Capped to the page's actual max scroll: if there's little content
-    // after this section, the ideal "finished" point may be physically
-    // unreachable, which would leave the fill permanently stuck short of
-    // full without this.
+    // Document-space thresholds, capped to max scroll so the fill can always finish.
     let startScrollY = 0;
     let endScrollY = 1;
 
@@ -130,7 +106,7 @@ export default function Experience() {
       <div className="mx-auto max-w-4xl">
         <h2 className="mb-20 flex flex-wrap items-baseline gap-4">
           <DigitCounter value={years} />
-          <span className="text-h4 font-bold text-ink-dim">Years Experience</span>
+          <span className="text-h4 font-bold text-ink-dim">Years Experience, And Counting</span>
         </h2>
 
         <div ref={containerRef} className="relative">
@@ -176,8 +152,6 @@ export default function Experience() {
             })}
           </div>
 
-          {/* The line continues past the most recent role, fading out --
-              the work's still ongoing, not a closed book. */}
           <div
             aria-hidden="true"
             className={`absolute left-2 h-24 w-px -translate-x-1/2 bg-line-lit transition-opacity duration-700 sm:left-1/2 ${

@@ -1,16 +1,5 @@
 'use client';
 
-/**
- * DitherImage.tsx
- *
- * Project thumbnail: full colour at rest. On hover, dissolves through the
- * same ordered-noise threshold as the rest of the kit into a desaturated,
- * downsampled/pixelated version, with a label fading in over it.
- *
- * Own small rAF loop, separate from DitherSurface's shared scheduler --
- * only runs while a hover transition is actually in flight.
- */
-
 import { useEffect, useRef, useState } from 'react';
 import { getBayerMatrix, fbm2, NOISE_SCALE } from '@/lib/ordered-noise';
 
@@ -18,8 +7,7 @@ export interface DitherImageProps {
   src: string;
   alt: string;
   label?: string;
-  /** CSS pixels per buffer pixel -- the same performance/chunkiness dial
-   *  as every other surface in the kit. */
+  /** CSS px per buffer pixel. */
   pixelSize?: number;
   /** Seconds for the transition to fully resolve. */
   duration?: number;
@@ -93,7 +81,6 @@ export default function DitherImage({
     ctx.putImageData(b.out, 0, 0);
   };
 
-  // Loads the image, then draws a colour and a desaturated pass into offscreen buffers.
   useEffect(() => {
     const host = hostRef.current;
     const canvas = canvasRef.current;
@@ -164,8 +151,7 @@ export default function DitherImage({
 
     st.running = true;
     let last = performance.now();
-    // Exponential ease toward the current target -- retriggering mid-transition
-    // (fast hover in/out) eases from wherever it is now, not from a snapshot.
+    // Exponential ease: retriggering mid-transition continues from where it is.
     const speed = 4 / duration;
 
     const frame = (now: number) => {

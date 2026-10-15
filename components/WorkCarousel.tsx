@@ -1,36 +1,5 @@
 'use client';
 
-/**
- * WorkCarousel.tsx
- *
- * A project's screenshots, one at a time, each at its own natural height --
- * a full-page capture runs long, a viewport shot or feature crop stays
- * short, and the page itself does the scrolling (no fixed frame with its
- * own inner scroll).
- *
- * Changing image is a short slide crossed with an ordered-dither fade: the
- * outgoing image drifts off one way while dissolving through a Bayer mask,
- * the incoming drifts in from the other while resolving through the same
- * mask, and the box's height eases between the two. Both are on screen the
- * whole time -- there's never a blank frame between them.
- *
- * If you've scrolled down a tall image, the incoming one is pinned to the
- * top of what you're looking at (not the carousel's top, somewhere above
- * you), then the page scrolls back up while the pin unwinds at the same
- * rate -- the image holds still on screen and lands at the carousel's top
- * with nothing jumping.
- *
- * Drag scrubs the transition directly. Let go short and it springs back;
- * past a third of the width, or with enough speed, it commits -- and a hard
- * flick chains through 2 or 3 images, the counter scrambling past each.
- * Arrows (and arrow keys when focused) step one at a time. Wraps at both
- * ends.
- *
- * Everything mid-transition is written straight to element styles from a
- * rAF loop, not through React state -- every <img> is rendered once, up
- * front, and only ever restyled.
- */
-
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { getBayerMatrix } from '@/lib/ordered-noise';
 import { imageSize } from '@/lib/image-sizes';
@@ -40,28 +9,23 @@ import type { WorkMedia } from '@/lib/works-data';
 
 const GLYPHS = '#%&$@*+=~/\\|<>[]{}';
 
-/** How far each image drifts, as a fraction of the box's width. Short on
- *  purpose -- the dither carries the change, the slide just gives it
- *  direction. */
+/** Drift distance, as a fraction of box width. */
 const SLIDE = 0.18;
 /** Drag distance (fraction of width) that takes the transition all the way. */
 const SCRUB_FULL = 0.6;
 /** Drag distance (fraction of width) that commits on release. */
 const COMMIT_DISTANCE = 0.3;
-/** Release speed (px/ms) that commits regardless of distance, and the
- *  speeds past which a flick chains 2 or 3 images instead of 1. */
+/** Release speed (px/ms) that commits, and the speeds that chain 2 or 3 images. */
 const COMMIT_VELOCITY = 0.5;
 const SKIP_2_VELOCITY = 1.2;
 const SKIP_3_VELOCITY = 2;
-/** Full transition length from rest (arrows); a drag release runs only the
- *  remaining part, quicker the harder it was flung. */
+/** Full transition length from rest; a drag release runs only the remainder. */
 const TRANSITION_MS = 520;
 const MIN_RELEASE_MS = 160;
 /** Each extra image a flick chains through. */
 const CHAIN_MS = 220;
 const SPRING_BACK_MS = 280;
-/** Gap left above the carousel when scrolling back up -- added to the
- *  header's height, which reappears on any upward scroll. */
+/** Gap kept above the carousel on scroll-back, on top of the header's height. */
 const SCROLL_GAP = 24;
 /** Scroll-back duration range -- scales with distance between these. */
 const SCROLL_MIN_MS = 450;
@@ -69,8 +33,7 @@ const SCROLL_MAX_MS = 900;
 
 const SCRAMBLE_GLYPH_MS = 45;
 
-/** One Bayer cell per DITHER_CELL x DITHER_CELL CSS pixels -- chunky, like
- *  every other dither surface in the kit. */
+/** CSS px per Bayer cell. */
 const DITHER_CELL = 3;
 const MASK_STEPS = 32;
 
@@ -98,10 +61,7 @@ function wait(ms: number) {
   return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 }
 
-/** Ordered-dither mask tiles, one per opacity step: a pixel is opaque when
- *  its Bayer threshold sits below the step's level. Tiling an 8x8 matrix is
- *  seamless by construction, so one small tile covers any image size --
- *  and swapping between cached data URLs is all the per-frame work. */
+/** Bayer mask tiles, one per opacity step, cached as data URLs. */
 let maskTiles: string[] | null = null;
 function getMaskTiles() {
   if (maskTiles) return maskTiles;
@@ -126,8 +86,7 @@ function getMaskTiles() {
   return maskTiles;
 }
 
-/** 0 hides the element, 1 clears the mask entirely so the resting image is
- *  untouched; anything between is a dither step. */
+/** 0 hides, 1 removes the mask, anything between is a dither step. */
 function setDither(el: HTMLElement, alpha: number) {
   const step = Math.round(Math.min(1, Math.max(0, alpha)) * MASK_STEPS);
   if (step >= MASK_STEPS) {
@@ -157,8 +116,7 @@ interface Transition {
   dir: 1 | -1;
   /** 0 = all `from`, 1 = all `to`. Already eased. */
   p: number;
-  /** The outgoing image was itself pinned (a chained hop), so it tracks the
-   *  same pin offset instead of sitting at the box's top. */
+  /** The outgoing image was pinned too (a chained hop). */
   outPinned: boolean;
 }
 
@@ -204,8 +162,7 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
     return el.offsetHeight || width * 0.625;
   };
 
-  /** Writes the current transition state to the DOM. Called every frame
-   *  while anything's moving, including the scroll-back after `p` lands. */
+  /** Writes the current transition state to the DOM, every frame while moving. */
   const apply = () => {
     const t = transition.current;
     const stage = stageRef.current;
@@ -219,8 +176,7 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
     const outY = t.outPinned ? pinY : 0;
     const shift = SLIDE * width;
 
-    // Whole pixels only -- a fractional offset resamples the dither mask's
-    // cells every frame, which reads as shimmer/shake.
+    // Whole pixels only -- fractional offsets make the dither mask shimmer.
     outEl.style.transform = `translate3d(${Math.round(-t.dir * shift * t.p)}px, ${Math.round(outY)}px, 0)`;
     inEl.style.transform = `translate3d(${Math.round(t.dir * shift * (1 - t.p))}px, ${Math.round(pinY)}px, 0)`;
     setDither(outEl, 1 - t.p);
@@ -231,8 +187,7 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
     stage.style.height = `${outBottom + (inBottom - outBottom) * t.p}px`;
   };
 
-  /** Takes both images out of flow, stacked at the top of a box locked to
-   *  the outgoing image's height, ready to animate. */
+  /** Stacks both images out of flow in a box locked to the outgoing height. */
   const begin = (from: number, dir: 1 | -1, outPinned = false) => {
     const stage = stageRef.current;
     const to = wrap(from + dir, count);
@@ -248,8 +203,7 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
     apply();
   };
 
-  /** Puts `keep` back in normal flow at rest, hides everything else, and
-   *  hands the box's height back to the image. */
+  /** Back to rest: `keep` in normal flow, the rest hidden. */
   const settle = (keep: number) => {
     const stage = stageRef.current;
     imgRefs.current.forEach((el, i) => {
@@ -262,8 +216,7 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
     transition.current = null;
   };
 
-  /** Re-points an in-progress drag at the other neighbour when the drag
-   *  crosses back over its starting point. */
+  /** Re-targets a drag that crosses back over its start. */
   const redirect = (dir: 1 | -1) => {
     const t = transition.current;
     if (!t || t.dir === dir) return;
@@ -297,12 +250,8 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
       requestAnimationFrame(frame);
     });
 
-  /** If the carousel's top has scrolled up past the header, bring it back
-   *  into view, concurrently with the transition. Goes through Lenis (the
-   *  page's smooth-scroll owner) rather than window.scrollTo, and re-pins
-   *  the incoming image from Lenis's own scroll event -- that fires in the
-   *  same frame Lenis moves the page, so the image holds dead still instead
-   *  of trailing a frame behind. */
+  /** Scrolls the carousel back into view via Lenis, re-pinning from Lenis's own
+   *  scroll event so the incoming image holds still. */
   const scrollBack = async () => {
     const root = rootRef.current;
     if (!root) return;
@@ -343,16 +292,13 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
     setCounter(pad(n + 1, digits));
   };
 
-  /** Runs the transition to completion -- picking up a drag's transition
-   *  where it was let go, or starting fresh for arrows/keys. `speed` is the
-   *  release velocity, for pacing the remainder. */
+  /** Runs the transition to completion; `speed` is the drag release velocity. */
   const commit = async (dir: 1 | -1, steps = 1, speed = 0) => {
     if (count < 2) return;
     busyRef.current = true;
     const hops = Math.min(steps, count - 1);
     if (!transition.current) begin(indexRef.current, dir);
-    // The box's height changes mid-transition; without this the browser's
-    // scroll anchoring can nudge the page to compensate, fighting scrollBack.
+    // Stops scroll anchoring fighting scrollBack while the box height changes.
     document.documentElement.style.overflowAnchor = 'none';
 
     const scrolling = scrollBack();
@@ -419,7 +365,6 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
     d.samples.push({ x: e.clientX, t: now });
     while (d.samples.length > 2 && now - d.samples[0].t > 100) d.samples.shift();
 
-    // Dragging left heads to the next image, right to the previous.
     if (dx !== 0) redirect(dx < 0 ? 1 : -1);
     const t = transition.current;
     if (!t) return;
@@ -440,8 +385,7 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
     const last = d.samples[d.samples.length - 1];
     const velocity = first && last && last.t > first.t ? (last.x - first.x) / (last.t - first.t) : 0;
     const speed = Math.abs(velocity);
-    // A flick back against the drag (dragged left, flung right) doesn't
-    // count as speed toward committing.
+    // A flick back against the drag doesn't count toward committing.
     const towardDir = Math.sign(velocity) === Math.sign(dx);
     const width = stage.clientWidth || 1;
 
@@ -493,13 +437,9 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
           multiple ? 'cursor-grab touch-pan-y active:cursor-grabbing' : ''
         }`}
       >
-        {/* Every image rendered once, up front -- transitions only restyle
-            them. Classes set the initial rest state; inline styles written
-            during transitions take over from there. */}
+        {/* Every image rendered once; transitions only restyle them. */}
         {media.map((m, i) => {
-          // From the `npm run images` manifest. With these, an image that
-          // hasn't loaded yet still lays out at its true aspect ratio, so
-          // heightOf() is right before the pixels arrive.
+          // Manifest sizes reserve each image's space before it loads.
           const size = imageSize(m.src);
           return (
             // eslint-disable-next-line @next/next/no-img-element -- screenshots vary in height; a plain img keeps natural aspect, and the files are pre-optimised (scripts/optimize-images.mjs)
@@ -525,9 +465,7 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
       </div>
 
       {multiple && (
-        // Sticky to the viewport's bottom while the image runs past it,
-        // resting on the image's bottom edge once you reach it. The negative
-        // margin overlays it on the image instead of sitting below.
+        // Sticky to the viewport bottom, resting on the image's bottom edge.
         <div className="pointer-events-none sticky bottom-6 z-10 -mt-16 flex h-16 items-center justify-center">
           <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-line-lit bg-black/10 px-1.5 py-1.5 backdrop-blur-xl">
             <button

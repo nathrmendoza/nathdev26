@@ -70,7 +70,6 @@ export default function CommandPalette({
 
   const promptLabel = `${user}@web ❯ `;
 
-  // Also wipes the scrollback -- reopening starts a fresh session.
   const close = () => {
     setOpen(false);
     setHistory(INITIAL_HISTORY);
@@ -218,8 +217,7 @@ export default function CommandPalette({
           type="button"
           data-dither-mask
           onClick={() => setOpen(true)}
-          // bottom-6 + leading-4 (one h-4 line): centres on the footer's row at
-          // the bottom of the page, level with its icons and BackToTop.
+          // bottom-6 + leading-4: level with the footer row and BackToTop.
           className="fixed bottom-6 left-12 z-40 font-mono text-[11px] leading-4 tracking-wide text-ink-faint uppercase transition-colors hover:text-ink"
         >
           Press <span className="text-accent">{shortcutKey}</span> or{' '}

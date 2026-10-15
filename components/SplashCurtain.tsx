@@ -1,18 +1,5 @@
 'use client';
 
-/**
- * SplashCurtain.tsx
- *
- * Full-viewport dither reveal on first paint -- same DitherSurface engine
- * as ContactForm's dissolve and PageTransition, radial mode. Starts fully covering with no
- * fade-in, then clears after `hold`. Also masks the WebGL background's own
- * shader-compile flicker.
- *
- * Mounted once in _app.tsx: plays on every full page load, not on
- * client-side route changes (that's PageTransition, plus DitherBackground's
- * pulse).
- */
-
 import { useEffect, useRef } from 'react';
 import { DitherSurface, type RGB } from '@/lib/dither-surface';
 
@@ -22,8 +9,7 @@ function hexToRgb(h: string): RGB {
 }
 
 export interface SplashCurtainProps {
-  /** Hex colour to dissolve from -- pass the background's own `ground`
-   *  so the curtain matches exactly what it reveals. */
+  /** Hex colour to dissolve from -- pass the background's ground. */
   ground: string;
   /** Milliseconds the curtain stays fully up before it starts dissolving. */
   hold?: number;
@@ -46,8 +32,7 @@ export default function SplashCurtain({ ground, hold = 700, speed = 1.8 }: Splas
       className: 'dither-canvas',
     });
 
-    // Radial mode clears the point furthest from origin first, so pinning
-    // origin to top-left clears bottom-right first.
+    // Radial clears the far point first, so a top-left origin clears bottom-right first.
     surface.origin = { x: 0, y: 0 };
 
     surface.progress = 1;

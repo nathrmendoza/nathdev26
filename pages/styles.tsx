@@ -6,8 +6,8 @@ import Marquee from "@/components/Marquee";
 import ScrambleReveal from "@/components/ScrambleReveal";
 import DigitCounter from "@/components/DigitCounter";
 import DitherImage from "@/components/DitherImage";
+import Seo from "@/components/Seo";
 
-// Placeholder data -- swap in the real grouping/levels before shipping.
 interface Skill {
   name: string;
   level: number;
@@ -134,8 +134,7 @@ export default function StyleGuidePage() {
     setSkillDraft("");
   };
 
-  // Typing or pasting a comma commits everything before it as a tag, live --
-  // covers both "type a term, hit enter" and "paste a whole requirements list".
+  // A comma commits everything before it as a tag -- handles pasted lists too.
   const handleSkillDraftChange = (value: string) => {
     if (value.includes(",")) {
       const parts = value.split(",");
@@ -156,8 +155,7 @@ export default function StyleGuidePage() {
     }
   };
 
-  // The in-progress draft counts as a live term too, so filtering updates as
-  // you type -- enter just locks it in as a tag and starts the next one.
+  // The in-progress draft filters live too.
   const skillTerms = useMemo(
     () => [...skillTags, skillDraft].map((t) => t.trim().toLowerCase()).filter(Boolean),
     [skillTags, skillDraft]
@@ -169,6 +167,7 @@ export default function StyleGuidePage() {
 
   return (
     <div className="min-h-screen px-6 py-20 sm:px-12 lg:px-20">
+      <Seo title="Style Guide | Nathan Mendoza" path="/styles" noindex />
       <div className="mx-auto max-w-4xl">
         <p className="mb-3 font-mono text-[10px] tracking-[0.2em] text-ink-faint uppercase">
           Internal reference -- not a public route
@@ -297,8 +296,7 @@ export default function StyleGuidePage() {
         </section>
       </div>
 
-      {/* Full-bleed: breaks out of the max-w-4xl container above so this
-          previews the same edge-to-edge span it'll have on the real page. */}
+      {/* Full-bleed, breaking out of the max-w-4xl container. */}
       <section className="mt-4 mb-20">
         <div className="mx-auto mb-6 max-w-4xl">
           <h3>Marquee</h3>
@@ -416,7 +414,7 @@ export default function StyleGuidePage() {
                 value={skillDraft}
                 onChange={(e) => handleSkillDraftChange(e.target.value)}
                 onKeyDown={handleSkillDraftKeyDown}
-                placeholder={skillTags.length === 0 ? "Search skills -- e.g. PHP, Laravel, C#" : "Add another..."}
+                placeholder={skillTags.length === 0 ? "Search skills — e.g. PHP, Laravel, C#" : "Add another..."}
                 className="min-w-[8ch] flex-1 bg-transparent py-1 font-mono text-[12px] text-ink placeholder:text-ink focus:outline-none"
               />
             </div>

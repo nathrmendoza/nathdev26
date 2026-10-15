@@ -1,13 +1,3 @@
-/**
- * ordered-noise.ts
- *
- * The math shared by every ordered-dither effect in this kit: a recursive
- * Bayer matrix used as a spatial threshold, and the value noise used both
- * to perturb reveal edges and, on its own, as the "dissolve" threshold
- * field. DitherSurface and DitherImage both build their per-pixel
- * threshold from these -- pulled out here so the two don't drift apart.
- */
-
 export type MatrixSize = 2 | 4 | 8;
 
 export interface BayerMatrix {

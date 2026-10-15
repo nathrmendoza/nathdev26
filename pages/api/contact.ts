@@ -2,20 +2,17 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { Resend } from "resend";
 import { HONEYPOT_FIELD, contactSchema, fieldErrors, type ContactField } from "@/lib/contact-schema";
 
-// Flat rather than an ok:true/ok:false union -- with `strict` off, TS can't
-// narrow on the discriminant, so callers just check `ok` and read the rest.
+// Flat, not a union: with `strict` off, TS can't narrow on `ok`.
 export interface ContactResponse {
   ok: boolean;
   error?: string;
   fieldErrors?: Record<ContactField, string>;
 }
 
-// Without a verified domain, Resend only delivers from its shared sender to
-// the account owner's own address -- which is exactly the contact-form case.
-// Set CONTACT_FROM_EMAIL once a domain is verified.
+// Resend's shared sender only delivers to the account owner. Set
+// CONTACT_FROM_EMAIL once a domain is verified.
 const DEFAULT_FROM = "Portfolio contact <onboarding@resend.dev>";
 
-// A contact message is a few KB at most; no reason to accept Next's 1mb default.
 export const config = {
   api: { bodyParser: { sizeLimit: "16kb" } },
 };
@@ -44,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const to = process.env.CONTACT_TO_EMAIL;
   if (!apiKey || !to) {
     console.error("[contact] RESEND_API_KEY or CONTACT_TO_EMAIL is not set");
-    return res.status(500).json({ ok: false, error: "The form isn’t set up yet -- email me directly instead." });
+    return res.status(500).json({ ok: false, error: "The form isn’t set up yet — email me directly instead." });
   }
 
   const { name, email, phone, subject, message } = parsed.data;
@@ -53,7 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { error } = await new Resend(apiKey).emails.send({
     from: process.env.CONTACT_FROM_EMAIL || DEFAULT_FROM,
     to,
-    // Hitting Reply in Gmail goes straight to the visitor.
     replyTo: email,
     subject: `[nathdev] ${subject.replace(/\s+/g, " ")}`,
     text: [
@@ -67,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   if (error) {
     console.error("[contact] Resend rejected the send:", error);
-    return res.status(502).json({ ok: false, error: "Couldn’t send just now -- try again, or email me directly." });
+    return res.status(502).json({ ok: false, error: "Couldn’t send just now — try again, or email me directly." });
   }
 
   return res.status(200).json({ ok: true });

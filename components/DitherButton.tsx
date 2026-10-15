@@ -1,15 +1,5 @@
 'use client';
 
-/**
- * DitherButton.tsx
- *
- * A button whose fill dithers in radially from the exact point the cursor
- * crossed the border, landing on a completely solid background.
- *
- * Set `invert` for the secondary variant: starts fully filled and dissolves
- * away on hover instead -- the mirror image of the default direction.
- */
-
 import { useEffect, useRef, type ButtonHTMLAttributes } from 'react';
 import { DitherSurface, localOrigin, type RGB, type DitherMode } from '@/lib/dither-surface';
 

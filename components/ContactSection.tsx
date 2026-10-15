@@ -1,36 +1,25 @@
 'use client';
 
-/**
- * ContactSection.tsx
- *
- * The closing section of the one-pager (id="contact", the nav's Contact
- * target): the form on the left, direct details on the right. Lifted out
- * of pages/contact.tsx, which still renders it, so the two can't drift
- * apart if that page comes back.
- */
-
 import ContactForm from '@/components/ContactForm';
 import ScrambleLink from '@/components/ScrambleLink';
-import { LinkedinIcon } from '@/components/icons';
 
 const EMAIL = 'nathmendoza.dev@gmail.com';
 const PHONE_DISPLAY = '022 106 4237';
 const PHONE_HREF = '0221064237';
-const LINKEDIN_URL = 'https://linkedin.com';
 
 export default function ContactSection() {
   return (
     <section id="contact" className="px-6 py-32 sm:px-12 sm:py-40">
-      <div className="mx-auto grid w-full max-w-6xl gap-16 lg:grid-cols-2 lg:gap-24">
+      <div className="mx-auto grid w-full max-w-4xl gap-16 lg:grid-cols-2">
         <div className="flex flex-col justify-center">
           <h2 className="mb-4">Get in Touch</h2>
           <p className="mb-8 max-w-md text-ink-dim">
-            Got a project in mind, or just want to say hi? Fill in the details below and I&rsquo;ll get back to you.
+            Got a project in mind, or just want to have a chat? Fill in the details below and I&rsquo;ll get back to you.
           </p>
           <ContactForm />
         </div>
 
-        <div className="flex flex-col justify-center gap-10 lg:pl-8">
+        <div className="flex flex-col justify-center gap-10">
           <div>
             <p className="text-h4 font-bold text-ink">Nathan Mendoza</p>
             <p className="text-ink-dim">Christchurch, New Zealand</p>

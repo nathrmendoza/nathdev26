@@ -1,30 +1,5 @@
 'use client';
 
-/**
- * Header.tsx
- *
- * Wordmark on the left, nav on the right (a burger + dropdown below `sm`,
- * see MobileNav). Mounted once in _app.tsx, outside PageTransition, so it
- * stays put across navigation.
- *
- * Hovering the logo sends a wave through it: each letter hops in turn, left
- * to right, like a snake. A hover mid-wave is ignored rather than
- * restarting it, so skimming the cursor across doesn't make it stutter.
- *
- * Plays a one-time entrance on mount: the logo slides up letter by letter,
- * then the nav reveals as if its labels were one continuous string -- first
- * every position pops in showing glitch noise, sweeping left to right, then
- * a second sweep in the same order resolves each position to its real
- * character. Doesn't replay on client-side route changes since this
- * component doesn't remount for those.
- *
- * Sticky, but not simply always-on-screen: while scrollY is still within
- * the header's own height it sits in normal flow. Past that, it stays
- * pinned to the top but slides out of view on scroll-down and back into
- * view on scroll-up -- so it reappears the moment you start scrolling back,
- * without waiting for a scroll back to the top.
- */
-
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -40,10 +15,7 @@ export interface NavItem {
   href: string;
 }
 
-// Shared with MobileNav. One-pager for launch: each item smooth-scrolls to
-// a section on `/` (ids on Experience, Skills, ContactSection). The Works
-// and Contact pages are hidden (they 404) -- restore their links here and
-// in pages/_app.tsx ROUTES when they come back.
+// Section links on `/`. The Works and Contact pages are hidden (404) for now.
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Background', href: '/#background' },
   { label: 'The Stack', href: '/#stack' },
@@ -64,9 +36,7 @@ function reducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** Sweep order across the nav's items, treating them as one continuous
- *  string: first item's first character through last item's last, left to
- *  right. */
+/** Sweep order across every label, as one continuous string. */
 function buildSweepOrder(items: NavItem[]) {
   const order: { itemIndex: number; charIndex: number }[] = [];
   items.forEach((item, itemIndex) => {
@@ -227,8 +197,7 @@ export default function Header() {
   const [navOn, setNavOn] = useState(false);
   const [visible, setVisible] = useState(true);
   const headerRef = useRef<HTMLElement>(null);
-  // Bumped per hover wave -- keys the letters' inner spans, so each bump
-  // remounts them and replays the animation from the start.
+  // Bumped per hover; keys the letters' inner spans so the animation replays.
   const [hopWave, setHopWave] = useState(0);
   const hopping = useRef(false);
 
@@ -248,14 +217,10 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    // Published so full-viewport sections (Hero) can size themselves to
-    // exactly the space left below the header instead of guessing its
-    // height, which shifts with the responsive padding and fluid type scale.
+    // Published for full-viewport sections (Hero).
     const el = headerRef.current;
     if (!el) return;
-    // Unrounded (not offsetHeight): pages that size to exactly
-    // 100vh - header - footer would otherwise overflow by a sub-pixel and
-    // still show a scrollbar.
+    // Unrounded, so 100vh-minus-header layouts don't overflow by a sub-pixel.
     const publish = () =>
       document.documentElement.style.setProperty('--header-h', `${el.getBoundingClientRect().height}px`);
     publish();
@@ -265,11 +230,8 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    // Anchor is the scroll position where visibility was last decided, not
-    // just the previous frame -- comparing frame-to-frame is way too
-    // sensitive to trackpad jitter and Lenis's own eased momentum, so it'd
-    // flicker on the tiniest wobble. A real toggle needs TOGGLE_PX of
-    // sustained movement past the anchor before it fires.
+    // Compared against the last toggle point, not the previous frame --
+    // trackpad and Lenis jitter would make it flicker.
     const TOGGLE_PX = 24;
     let anchorY = window.scrollY;
     let ticking = false;
@@ -324,7 +286,7 @@ export default function Header() {
         onPointerEnter={startHop}
         onFocus={startHop}
         className="block shrink-0 no-underline"
-        aria-label="NDEV -- home"
+        aria-label="NDEV — home"
       >
         <span className="flex font-display text-h2 font-extrabold tracking-tight text-ink uppercase">
           {LOGO.map((ch, i) => (
@@ -335,8 +297,7 @@ export default function Header() {
               }`}
               style={{ transitionDelay: `${i * LOGO_STAGGER}ms` }}
             >
-              {/* Inner span carries the hop, so its transform never fights
-                  the outer span's entrance transition. */}
+              {/* Inner span carries the hop, so it never fights the entrance transition. */}
               <span
                 key={hopWave}
                 className={`inline-block ${hopWave ? 'animate-hop' : ''}`}

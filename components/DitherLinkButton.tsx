@@ -1,15 +1,5 @@
 'use client';
 
-/**
- * DitherLinkButton.tsx
- *
- * DitherButton's fill-in-on-hover treatment, on a real `<a>` instead of a
- * `<button>` -- for CTAs that navigate, so cmd/ctrl-click, middle-click, and
- * right-click "open in new tab" all still work natively (DitherSurface
- * itself doesn't care what element hosts it, see .dither-host in
- * dither.css).
- */
-
 import { useEffect, useRef, type AnchorHTMLAttributes } from 'react';
 import { DitherSurface, localOrigin, type RGB, type DitherMode } from '@/lib/dither-surface';
 import { useInternalLinkClick } from '@/lib/useInternalLinkClick';

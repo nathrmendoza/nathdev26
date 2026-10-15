@@ -3,8 +3,7 @@ import Link from "next/link";
 import DitherImage from "@/components/DitherImage";
 import { WORKS } from "@/lib/works-data";
 
-// Hidden for launch (one-pager) -- 404s until this returns. Delete this to
-// bring the page back, along with its links in Header NAV_ITEMS and _app ROUTES.
+// Hidden for launch -- 404s. Remove to restore.
 export const getStaticProps: GetStaticProps = () => ({ notFound: true });
 
 export default function WorksPage() {

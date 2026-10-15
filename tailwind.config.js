@@ -18,11 +18,7 @@ module.exports = {
         mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
         display: ['var(--font-display)', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
-      // Values are the --fs-* custom properties defined in globals.css (the
-      // clamp() math lives there, once). These give you text-h1..text-small
-      // utilities for when something needs heading-scale sizing without
-      // being a literal <h1>..<h6> tag; pair with font-display/uppercase/etc
-      // yourself since this only carries size + line-height.
+      // From the --fs-* variables in globals.css.
       fontSize: {
         h1: ['var(--fs-h1)', { lineHeight: '0.95' }],
         h2: ['var(--fs-h2)', { lineHeight: '1' }],
@@ -33,26 +29,17 @@ module.exports = {
         body: ['var(--fs-body)', { lineHeight: '1.65' }],
         small: ['var(--fs-small)', { lineHeight: '1.5' }],
       },
-      // Duration is overridden per-instance via inline style (see
-      // Marquee.tsx); this just registers the keyframes and a default.
+      // Marquee overrides the duration per instance.
       keyframes: {
         marquee: {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
-        // Page-transition entrance for whatever's in the viewport on load --
-        // see the `key={router.asPath}` wrapper in _app.tsx.
-        fadeIn: {
-          '0%': { opacity: '0', transform: 'translateY(8px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        // Small amplitude on purpose -- the hero's scroll cue, not a UI toy.
         bounceSoft: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(6px)' },
         },
-        // One letter's hop in the header logo's hover wave -- a jump, a
-        // small rebound, then still. Staggered per letter in Header.tsx.
+        // Header logo hover wave, staggered per letter.
         hop: {
           '0%, 100%': { transform: 'translateY(0)' },
           '30%': { transform: 'translateY(-0.18em)' },
@@ -62,7 +49,6 @@ module.exports = {
       },
       animation: {
         marquee: 'marquee 60s linear infinite',
-        'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
         'bounce-soft': 'bounceSoft 2.2s ease-in-out infinite',
         hop: 'hop 0.5s cubic-bezier(0.33, 1, 0.68, 1) both',
       },

@@ -1,53 +1,30 @@
 'use client';
 
-/**
- * DitherBackground.tsx
- *
- * Full-screen animated background: domain-warped fractal noise, ordered-
- * dithered through a Bayer matrix, with a cursor proximity lift and a pulse
- * on route change. WebGL, not Canvas 2D -- a full viewport is too many
- * pixels for a JS loop (UI-scale effects use lib/dither-surface.ts instead).
- *
- * Any element with a `data-dither-mask` attribute (or an ancestor that has
- * one) suppresses the cursor glow while the pointer is over it. Keep the
- * mask tight around actual content, not a full-bleed container, or the
- * glow has nowhere left to show.
- *
- * Also owns the page's Lenis instance, driven from this component's own rAF
- * loop, independently of whether WebGL is available.
- */
-
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Lenis from 'lenis';
 import { setLenis } from '@/lib/lenis';
 
 export interface DitherBackgroundConfig {
-  /** CSS pixels per buffer pixel. THE performance dial: the buffer is the
-   *  viewport divided by this, then upscaled with image-rendering: pixelated.
-   *  Raising it is both cheaper and chunkier, which is the look anyway. */
+  /** CSS px per buffer pixel -- the main performance dial. */
   pixelSize: number;
   matrix: 2 | 4 | 8;
   levels: number;
   dither: number;
-  /** Lower values make the ribbons bigger. Push toward 0.8 for broad liquid
-   *  shapes rather than fine texture. */
+  /** Lower = bigger ribbons. */
   scale: number;
   /** 0 is plain FBM. Higher values produce the liquid ribbons. */
   warp: number;
   /** Cost is roughly octaves x 5 noise samples per pixel. */
   octaves: number;
   speed: number;
-  /** The pattern is squeezed into this band rather than the full 0-1 ramp,
-   *  which leaves headroom above it for the cursor to push into. Raise the
-   *  ceiling to 1 and the cursor has nowhere brighter to go. */
+  /** Ambient band; the headroom above it is for the cursor glow. */
   ambientLow: number;
   ambientHigh: number;
   cursorRadius: number;
   cursorLift: number;
   cursorEase: number;
-  /** How fast the cursor glow turns on/off crossing a `data-dither-mask`
-   *  boundary. Higher is snappier. */
+  /** Cursor glow fade speed across data-dither-mask edges. */
   cursorFadeSpeed: number;
   pulseDuration: number;
   pulseWidth: number;
@@ -204,8 +181,7 @@ export default function DitherBackground({
   pulseSignal,
 }: {
   config?: Partial<DitherBackgroundConfig>;
-  /** Bump this (e.g. a counter you increment) to fire the pulse manually,
-   *  independent of the route-change pulse below. */
+  /** Bump to fire the pulse manually. */
   pulseSignal?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -307,8 +283,7 @@ export default function DitherBackground({
     };
     window.addEventListener('pointermove', onMove, { passive: true });
 
-    // Eased toward 1 over free space, 0 over data-dither-mask. Hit-tested
-    // once per frame rather than per pointer event.
+    // Hit-tested once per frame, not per pointer event.
     let cursorActive = 1;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');

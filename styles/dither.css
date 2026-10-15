@@ -1,15 +1,4 @@
-/* ------------------------------------------------------------------ *
- * dither.css
- *
- * Shared plumbing for the dither-kit components: the pieces that can't be
- * expressed as Tailwind utility classes (generated canvases, pseudo-element
- * rails, keyframes). Everything else -- layout, spacing, colour choices --
- * is applied via Tailwind classes on the components themselves.
- * ------------------------------------------------------------------ */
-
-/* Any host element that owns a DitherSurface needs a positioning context.
-   `isolation` keeps the canvas's stacking context local so it can't slide
-   over something else on the page. */
+/* Positioning context; isolation keeps the canvas's stacking local. */
 .dither-host,
 .dither-btn {
   position: relative;
@@ -17,9 +6,7 @@
   overflow: hidden;
 }
 
-/* The canvas the surface creates. `pointer-events: none` matters -- without
-   it the canvas swallows the hover on the element underneath and the effect
-   flickers as the pointer crosses it. */
+/* pointer-events: none, or the canvas swallows hover and the effect flickers. */
 .dither-canvas {
   position: absolute;
   inset: 0;
@@ -47,16 +34,12 @@
   transition: color 0.18s ease 0.06s;
 }
 
-/* Label flips to the ground colour once the fill is in. The small delay lets
-   the dither get most of the way across before the text changes, which reads
-   better than flipping on the first frame. */
+/* Label flips once the fill is mostly in, not on the first frame. */
 .dither-btn.is-on .dither-btn-label {
   color: var(--dither-inverted, #0d0f10);
 }
 
-/* Secondary/inverted button: starts filled, so the label starts dark to
-   match, then flips light as hover dissolves the fill away -- the reverse
-   of the primary button above. */
+/* Secondary: starts filled with a dark label, flips light as the fill dissolves. */
 .dither-btn.is-inverted .dither-btn-label {
   color: #0d0f10;
 }
@@ -65,11 +48,7 @@
   color: #d9dcd6;
 }
 
-/* Scramble link: unresolved characters are dimmed so the resolve reads as
-   things coming into focus rather than glyphs randomly changing. An
-   underline grows in left to right alongside the scramble, on its own CSS
-   transition -- a separate effect running in parallel, not driven by the
-   same character-resolve timing. */
+/* Unresolved characters are dimmed; the underline grows on its own transition. */
 .dither-scramble {
   position: relative;
   display: inline-block;
@@ -96,16 +75,12 @@
   transform: scaleX(1);
 }
 
-/* Unresolved character while scrambling -- shared by ScrambleLink and
-   ScrambleReveal, not scoped to .dither-scramble's own layout, since
-   ScrambleReveal renders in whatever font its heading uses. */
+/* Shared by ScrambleLink and ScrambleReveal. */
 i[data-off] {
   color: var(--dither-dim, #9ca199);
 }
 
-/* Contact form field: a 2px accent rail that wipes down the left edge on
-   focus and turns warm on a failed validation. No canvas -- texture behind
-   live text fights legibility, so this stays a plain CSS transform. */
+/* Plain CSS rail, no canvas -- texture behind live text hurts legibility. */
 .dither-field {
   position: relative;
 }

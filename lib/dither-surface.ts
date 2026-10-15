@@ -1,13 +1,3 @@
-/**
- * dither-surface.ts
- *
- * One ordered-dithering Canvas 2D surface per component (button fills,
- * panel dissolves, focus states), all sharing a single requestAnimationFrame
- * loop. Canvas 2D, not WebGL: browsers cap live WebGL contexts around 8-16,
- * so one per button would hit the ceiling and start killing the oldest.
- * DitherBackground.tsx is WebGL instead, for the full viewport.
- */
-
 import { getBayerMatrix, fbm2, NOISE_SCALE, type MatrixSize } from './ordered-noise';
 
 export type DitherMode = 'radial' | 'linear' | 'dissolve';
@@ -15,16 +5,12 @@ export type { MatrixSize } from './ordered-noise';
 export type RGB = [number, number, number];
 
 export interface DitherOptions {
-  /** How the reveal is ordered.
-   *  radial   - grows outward from `origin` (set it to the cursor on enter)
-   *  linear   - wipes left to right
-   *  dissolve - threshold field is the noise itself, so pixels drop in
-   *             scattered clumps. This is the one for covering a panel. */
+  /** radial grows from `origin`, linear wipes left to right, dissolve drops
+   *  in noise-ordered clumps (the one for covering a panel). */
   mode?: DitherMode;
   /** Fill colour as [r, g, b], 0-255. */
   rgb?: RGB;
-  /** Alpha level at full reveal. 1 lands on a completely solid fill;
-   *  anything lower holds a permanent half-tone (good for secondary buttons). */
+  /** Alpha at full reveal. Below 1 holds a permanent half-tone. */
   fill?: number;
   /** Easing rate toward the target. Higher is snappier. */
   speed?: number;
@@ -42,22 +28,14 @@ export interface DitherOptions {
   turbulence?: number;
   /** Width of the soft edge band, as a fraction of the reveal. */
   feather?: number;
-  /** Modulates a flat fill by the noise. Without this, a low uniform fill
-   *  through a Bayer matrix renders as a regular dot grid -- a printed
-   *  halftone, which reads badly behind text. */
+  /** Modulates a flat fill by noise, so low fills read as clumps, not a halftone grid. */
   texture?: number;
 
-  /** paint - the dither is drawn as coloured pixels on a canvas over the host.
-   *  mask  - the dither becomes the host's CSS mask instead, so covered pixels
-   *          go transparent rather than coloured -- whatever sits behind the
-   *          host (the live background) shows through. `rgb` is ignored. */
+  /** paint draws coloured pixels over the host; mask makes covered pixels
+   *  transparent instead (`rgb` ignored). */
   output?: 'paint' | 'mask';
-  /** Mask mode only. What the dither buffer covers.
-   *  host     - the whole host element.
-   *  viewport - just the visible part of it; the rest is hidden for the
-   *             duration. Keeps the per-frame cost flat on a host many
-   *             screens tall (a whole page), since only the viewport's
-   *             worth of pixels is ever computed and encoded. */
+  /** Mask mode only: `viewport` limits the buffer to the visible area, keeping
+   *  the cost flat on very tall hosts. */
   frame?: 'host' | 'viewport';
 
   className?: string;
@@ -82,10 +60,6 @@ const DEFAULTS = {
 
 // Mask mode at full coverage -- nothing shows, no need to encode a frame.
 const MASK_HIDDEN = 'linear-gradient(transparent, transparent)';
-
-/* ------------------------------------------------------------------ *
- * Shared scheduler -- idle surfaces cost nothing
- * ------------------------------------------------------------------ */
 
 const SURFACES: DitherSurface[] = [];
 let raf = 0;
@@ -120,10 +94,6 @@ if (typeof document !== 'undefined') {
 const prefersReduced = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/* ------------------------------------------------------------------ *
- * The surface
- * ------------------------------------------------------------------ */
 
 export class DitherSurface {
   private host: HTMLElement;
@@ -198,8 +168,7 @@ export class DitherSurface {
     this.h = h;
     this.canvas.width = w;
     this.canvas.height = h;
-    // Allocated once per size. Creating an ImageData every frame is the one
-    // thing that will actually make this slow.
+    // Allocated once per size -- a new ImageData per frame is what makes this slow.
     this.img = this.ctx.createImageData(w, h);
     this.wake();
   }
@@ -241,8 +210,7 @@ export class DitherSurface {
       return;
     }
 
-    // Fully revealed and fully opaque: paint solid. Guarantees no stray unlit
-    // pixels survive the dither at rest, and skips the per-pixel loop entirely.
+    // Fully covered: paint solid, so no stray pixels survive and the loop is skipped.
     if (p >= 1 && fill >= 1) {
       if (asMask) {
         this.setMask(MASK_HIDDEN);
@@ -262,9 +230,8 @@ export class DitherSurface {
     const [r, g, b] = rgb;
     const t = this.t;
 
-    // Remap so 0 is fully clear and 1 fully covered. The turbulence term is
-    // included because noise pushes `field` above 1 at the far corners --
-    // without it the reveal stalls just short and leaves pixels stuck unlit.
+    // Turbulence is included because noise pushes `field` past 1 at the corners --
+    // without it the reveal stalls just short.
     const pp = p * (1 + 2 * feather + turb) - feather;
 
     const { x: ox, y: oy } = this.origin;
@@ -295,8 +262,7 @@ export class DitherSurface {
           field = fbm2(x * NOISE_SCALE * 1.7, y * NOISE_SCALE * 1.7);
         }
 
-        // Noise perturbs the edge so it never reads as a CSS wipe, and
-        // modulates the fill so a flat area is clumps, not a halftone grid.
+        // Noise breaks up the edge and turns flat fills into clumps.
         let n = 0;
         if (turb > 0 || tex > 0) {
           n = fbm2(x * NOISE_SCALE + t, y * NOISE_SCALE - t * 0.6);
@@ -326,10 +292,7 @@ export class DitherSurface {
     if (asMask) this.setMask(`url(${this.canvas.toDataURL()})`);
   }
 
-  /** Mask mode: apply a mask image to the host, or `null` to drop it so the
-   *  host renders untouched (and crisp) at rest. The buffer is small, so
-   *  encoding it each frame is cheap; `pixelated` keeps the grain hard-edged
-   *  as it's stretched to the host's size. */
+  /** Mask mode: apply a mask image to the host, or `null` to remove it at rest. */
   private setMask(image: string | null) {
     const style = this.host.style;
     if (image === null) {
@@ -339,8 +302,7 @@ export class DitherSurface {
       }
       return;
     }
-    // Viewport frame: pin the mask to the visible window, re-read every frame
-    // so it tracks scrolling. Outside it, no-repeat leaves nothing -- hidden.
+    // Viewport frame: pin the mask to the visible window, re-read each frame for scroll.
     let size = '100% 100%';
     let position = '0 0';
     if (this.viewportFramed) {

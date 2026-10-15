@@ -1,14 +1,3 @@
-/**
- * Marquee.tsx
- *
- * A continuously looping band of oversized text for a full-width statement.
- * Pure CSS transform animation (see `marquee` in tailwind.config.js), not a
- * rAF loop, so it doesn't compete with the dither background's or Lenis's.
- *
- * Content is duplicated exactly twice so the loop is seamless: at -50%
- * translateX the second copy sits where the first started.
- */
-
 import { Fragment } from 'react';
 
 export interface MarqueeProps {
@@ -44,7 +33,7 @@ export default function Marquee({
       data-dither-mask
       className={`relative overflow-hidden ${className}`.trim()}
       role="img"
-      aria-label={phrases.join(' -- ')}
+      aria-label={phrases.join(', ')}
     >
       <div
         aria-hidden="true"

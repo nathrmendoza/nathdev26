@@ -1,11 +1,3 @@
-/**
- * scroll-to.ts
- *
- * Smooth in-page scrolling, through Lenis (see lib/lenis.ts) so it eases
- * the same way a wheel scroll does instead of fighting Lenis's loop the
- * way window.scrollTo / scrollIntoView would. Instant under reduced motion.
- */
-
 import { getLenis } from '@/lib/lenis';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;

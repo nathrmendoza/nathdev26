@@ -1,19 +1,5 @@
 'use client';
 
-/**
- * MobileNav.tsx
- *
- * Below `sm`, the header's nav collapses into a round burger button. Tapping
- * it folds the three lines into an X (top and bottom rotate in to meet at
- * the centre, the middle one collapses away) and pops a dropdown in below,
- * styled to match the CommandPalette's terminal panel -- same hairline
- * border, rounded corners and blurred backdrop.
- *
- * Closes on link tap, Escape, a tap anywhere outside, or when the header
- * slides out of view on scroll (it'd otherwise be left floating without
- * its button).
- */
-
 import { useEffect, useId, useRef, useState } from 'react';
 import type { NavItem } from '@/components/Header';
 import { useInternalLinkClick } from '@/lib/useInternalLinkClick';
@@ -72,8 +58,7 @@ export default function MobileNav({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
 
-  // Adjusting state during render, not in an effect, when the header hides
-  // -- React's recommended pattern for resetting state off a prop change.
+  // Reset during render, not in an effect -- React's pattern for prop-driven resets.
   if (hidden && open) setOpen(false);
 
   useEffect(() => {
@@ -108,8 +93,7 @@ export default function MobileNav({
           open ? 'border-accent text-accent' : 'border-line-lit text-ink'
         } ${revealed ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
       >
-        {/* px, not rem: the root font-size is fluid, and these offsets have to
-            land the outer lines exactly on the middle one to form the X. */}
+        {/* px, not rem: the root font-size is fluid and these must line up exactly. */}
         <span aria-hidden="true" className="relative block h-[12px] w-[18px]">
           <span
             className={`absolute top-0 left-0 h-[1.5px] w-full bg-current transition-transform duration-300 ease-out ${

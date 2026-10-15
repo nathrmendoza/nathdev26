@@ -1,15 +1,5 @@
 'use client';
 
-/**
- * DitherControls.tsx
- *
- * Live tuning panel for <DitherBackground>. Controlled component -- reports
- * edits via `onChange` rather than owning the config itself.
- *
- * Auto-saves to localStorage and restores on load. "Copy config" (under
- * Export) gives a paste-ready object to promote into DEFAULT_CONFIG.
- */
-
 import { useEffect, useId, useRef, useState } from 'react';
 import { DEFAULT_CONFIG, type DitherBackgroundConfig } from './DitherBackground';
 
@@ -19,8 +9,7 @@ export interface DitherControlsProps {
   onFirePulse?: () => void;
   defaultOpen?: boolean;
   className?: string;
-  /** localStorage key used to persist edits across reloads. Pass `false` to
-   *  disable persistence. */
+  /** localStorage key for persisting edits; false disables. */
   storageKey?: string | false;
 }
 
@@ -30,8 +19,7 @@ type NumericKey = {
 
 const DEFAULT_STORAGE_KEY = 'dither-background-config';
 
-// Fixed order so the exported object always reads the same as the interface,
-// regardless of key order after a JSON round-trip.
+// Fixed key order, so the export reads the same as the interface.
 const CONFIG_KEYS: (keyof DitherBackgroundConfig)[] = [
   'pixelSize', 'matrix', 'levels', 'dither',
   'scale', 'warp', 'octaves', 'speed',
@@ -434,7 +422,7 @@ export default function DitherControls({
                     className="w-full resize-none rounded-sm border border-line bg-white/[0.04] p-2 font-mono text-[10px] leading-relaxed text-ink-dim"
                   />
                   <p className="text-[9px] leading-relaxed text-ink-faint">
-                    Clipboard access failed -- select the text above and copy manually.
+                    Clipboard access failed — select the text above and copy manually.
                   </p>
                 </>
               )}

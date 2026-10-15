@@ -1,31 +1,5 @@
 'use client';
 
-/**
- * Hero3DText.tsx
- *
- * The hero headline, rendered as real extruded 3D geometry (not a CSS
- * illusion) from the actual Archivo glyph outlines -- see lib/hero-glyphs.ts
- * for where those come from. Orthographic camera, so it reads as flat
- * "signage" rather than perspective-receding type. The whole object faces
- * toward the cursor with a small, eased rotation (a few degrees, never a
- * full turn) and holds still otherwise -- one calm interaction, not a scene
- * competing with DitherBackground's own ambient movement.
- *
- * Shading is deliberately not smooth Lambertian: a fixed light direction's
- * intensity per face is quantized through the same Bayer ordered-dither
- * threshold as the rest of the kit (lib/ordered-noise.ts), so the letters'
- * flat and bevelled faces pick up the site's halftone shading instead of a
- * generic 3D-software gradient.
- *
- * Intro, once per mount: the letters develop in through that same Bayer
- * threshold (mixed with value noise so it resolves in clumps, not a grid)
- * while the geometry pushes out from flat to full depth and swings in from
- * a steep angle. Every intro value lands exactly on the resting state --
- * full depth, zero offset, nothing discarded -- so once it settles the text
- * looks and tracks the cursor exactly as it would without it. Timed to the
- * SplashCurtain on a full load; near-immediate on client-side navigation.
- */
-
 import { useEffect, useRef } from 'react';
 import {
   Scene,
@@ -41,34 +15,26 @@ import {
 import { getBayerMatrix } from '@/lib/ordered-noise';
 import { layoutLine, HERO_UNITS_PER_EM } from '@/lib/hero-glyphs';
 
-const TEXT = '200 / OK';
-
 const MAX_ROTATION_DEG = 15;
 const EASE = 0.07;
 
-// Intro timing. INTRO_DELAY_FIRST waits out SplashCurtain's hold (700ms)
-// and most of its dissolve, so the intro plays on a clear screen instead of
-// half-hidden under the curtain.
+// INTRO_DELAY_FIRST waits out SplashCurtain, so the intro plays on a clear screen.
 const INTRO_DELAY_FIRST = 1400;
 const INTRO_DELAY_ROUTE = 150;
 const INTRO_MS = 1400;
-/** Fraction of the intro the dither develop takes -- finishes before the
- *  depth/rotation settle, so the last stretch is purely the 3D landing. */
+/** Fraction of the intro the dither develop takes. */
 const DEVELOP_END = 0.8;
 /** Fraction of the intro at which `onLanded` fires. */
 const LANDED_AT = 0.75;
-// Starting offsets, eased to 0. Kept modest: with depth also starting near
-// flat, the silhouette stays inside the camera fit computed for the resting
-// rotation range, so nothing clips mid-swing.
+// Kept modest so the mid-swing silhouette stays inside the camera fit.
 const INTRO_ROT_X_DEG = 20;
 const INTRO_ROT_Y_DEG = -30;
 const INTRO_MIN_DEPTH = 0.04;
 /** CSS pixels per develop cell -- chunky like the rest of the kit's dither. */
 const DEVELOP_CELL_PX = 3;
 
-// Full load vs. client-side return to `/`. Flipped once the intro actually
-// starts playing (not on effect start), so React Strict Mode's dev-only
-// mount/unmount/mount doesn't make the first real run think it's a revisit.
+// Set when the intro actually starts, so Strict Mode's double mount
+// isn't mistaken for a revisit.
 let introPlayed = false;
 
 const INK = [217 / 255, 220 / 255, 214 / 255];
@@ -117,8 +83,7 @@ const FRAGMENT_SHADER = /* glsl */ `
   }
 
   void main() {
-    // Intro develop. Skipped entirely at 1.0, so the resting render is
-    // untouched by any of this.
+    // Skipped at 1.0, so the resting render is untouched.
     if (uProgress < 1.0) {
       vec2 cell = floor(gl_FragCoord.xy / uCell);
       int cx = int(mod(cell.x, 8.0));
@@ -129,9 +94,7 @@ const FRAGMENT_SHADER = /* glsl */ `
 
     vec3 n = normalize(vNormal);
     vec3 lightDir = normalize(vec3(-0.45, 0.55, 0.75));
-    // Half-lambert, not a hard clamp to 0 -- faces angled away from the
-    // light still land mid-band instead of flattening into solid black,
-    // so the dither texture shows on every face, not just the lit ones.
+    // Half-lambert, so faces turned away still show dither instead of solid black.
     float ndl = dot(n, lightDir) * 0.5 + 0.5;
 
     int xi = int(mod(gl_FragCoord.x, 8.0));
@@ -161,12 +124,19 @@ const EXTRUDE_SETTINGS = {
 };
 
 export interface Hero3DTextProps {
-  /** Fires once, as the intro is landing -- for staging whatever comes
-   *  next (Hero's tagline). Immediately under reduced motion. */
+  /** Rendered in 3D. Limited to the glyphs baked into lib/data/hero-glyphs.json. */
+  text?: string;
+  /** The page's real <h1>, for screen readers and search -- the 3D text is decorative. */
+  heading?: string;
+  /** Fires once as the intro lands. Immediately under reduced motion. */
   onLanded?: () => void;
 }
 
-export default function Hero3DText({ onLanded }: Hero3DTextProps) {
+export default function Hero3DText({
+  text = '200 / OK',
+  heading = 'Nathan Mendoza — Web Developer, Christchurch NZ',
+  onLanded,
+}: Hero3DTextProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const onLandedRef = useRef(onLanded);
 
@@ -182,10 +152,7 @@ export default function Hero3DText({ onLanded }: Hero3DTextProps) {
     const camera = new OrthographicCamera();
     const renderer = new WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    // Layout size is owned by this CSS, independent of the drawing-buffer
-    // resolution setSize() below manages -- otherwise, with updateStyle
-    // false, the canvas's box defaults to its (pixelRatio-multiplied)
-    // intrinsic width/height attributes instead of the container's size.
+    // CSS owns the layout size; setSize() below only manages the drawing buffer.
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
     renderer.domElement.style.display = 'block';
@@ -206,7 +173,7 @@ export default function Hero3DText({ onLanded }: Hero3DTextProps) {
     });
 
     const group = new Group();
-    const line = layoutLine(TEXT);
+    const line = layoutLine(text);
     for (const glyph of line.glyphs) {
       const geometry = new ExtrudeGeometry(glyph.shape, EXTRUDE_SETTINGS);
       geometry.translate(-line.width / 2 + glyph.x, 0, -EXTRUDE_SETTINGS.depth / 2);
@@ -219,10 +186,7 @@ export default function Hero3DText({ onLanded }: Hero3DTextProps) {
 
     const maxRotation = degToRad(MAX_ROTATION_DEG);
 
-    // Fit the camera to the silhouette across the full rotation range, not
-    // just the resting pose -- a rotated object's on-screen extent is wider
-    // than at rest, so sizing off rotation.set(0,0,0) alone clips the edges
-    // the moment it tilts toward the cursor.
+    // Fit across the full rotation range, not just the resting pose, so tilting never clips.
     const bounds = new Box3();
     for (const rx of [-maxRotation, 0, maxRotation]) {
       for (const ry of [-maxRotation, 0, maxRotation]) {
@@ -309,9 +273,7 @@ export default function Hero3DText({ onLanded }: Hero3DTextProps) {
         current.x += (target.x - current.x) * EASE;
         current.y += (target.y - current.y) * EASE;
 
-        // Intro offsets ride on top of the normal cursor easing rather than
-        // replacing it, so tracking is already live underneath and there's
-        // no hand-off jump when the intro ends.
+        // Intro offsets add on top of the cursor easing, so there's no hand-off jump.
         let offX = 0;
         let offY = 0;
         let depth = 1;
@@ -366,12 +328,12 @@ export default function Hero3DText({ onLanded }: Hero3DTextProps) {
       renderer.dispose();
       container.removeChild(renderer.domElement);
     };
-  }, []);
+  }, [text]);
 
   return (
     <div ref={containerRef} className="h-[34vh] min-h-[220px] w-full sm:h-[42vh]">
       {/* Real heading for screen readers/SEO -- the 3D text is decorative, not semantic. */}
-      <h1 className="sr-only">Nathan Mendoza — Web Developer, Christchurch NZ</h1>
+      <h1 className="sr-only">{heading}</h1>
     </div>
   );
 }

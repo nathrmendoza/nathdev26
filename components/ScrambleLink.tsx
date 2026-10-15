@@ -1,19 +1,5 @@
 'use client';
 
-/**
- * ScrambleLink.tsx
- *
- * Text that scrambles out and resolves back in on hover -- the dithering
- * idea applied to characters instead of pixels.
- *
- * Each character resolves at a threshold from a bit-reversal sequence (the
- * 1D equivalent of a Bayer matrix), settling in a scattered, evenly
- * distributed order rather than randomly (cf. GSAP's ScrambleTextPlugin,
- * which reads as noise, not a pattern) or left-to-right.
- *
- * Use a monospace face -- proportional type jitters as glyphs resolve.
- */
-
 import { useCallback, useEffect, useRef, type AnchorHTMLAttributes, type MouseEvent } from 'react';
 import { useInternalLinkClick } from '@/lib/useInternalLinkClick';
 
@@ -50,7 +36,6 @@ export default function ScrambleLink({
   const cells = useRef<{ el: HTMLElement; ch: string; th: number }[]>([]);
   const state = useRef({ prog: 1, targ: 1, running: false, prev: 0, timer: 0 });
 
-  // Build one span per character, each with its ordered threshold.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;

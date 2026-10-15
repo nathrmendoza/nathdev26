@@ -1,23 +1,11 @@
 'use client';
 
-/**
- * BackToTop.tsx
- *
- * The back-to-top arrow, pinned to the viewport's bottom-right instead of
- * living in the footer row -- same spot and padding the footer gives it,
- * so at the very bottom of the page it lines up where it used to sit.
- * Mounted once in _app.tsx.
- *
- * Hidden until you've scrolled half a screen down (there's nothing to go
- * back up to before that), then fades/slides in with the footer icons'
- * entrance motion.
- */
-
 import { useEffect, useState } from 'react';
 import { ArrowUpIcon } from '@/components/icons';
 import { scrollToTop } from '@/lib/scroll-to';
 
 export default function BackToTop() {
+  // Hidden until half a screen down -- nothing to go back to above that.
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
@@ -43,7 +31,7 @@ export default function BackToTop() {
       aria-label="Back to top"
       inert={!shown}
       data-dither-mask
-      className={`fixed right-6 bottom-6 z-30 block h-4 w-4 cursor-pointer text-ink transition-all duration-400 ease-out hover:text-accent motion-reduce:translate-y-0 sm:right-12 ${
+      className={`fixed right-6 bottom-4 z-30 block h-8 w-8 cursor-pointer text-ink transition-all duration-400 ease-out hover:text-accent motion-reduce:translate-y-0 sm:right-12 sm:bottom-6 sm:h-4 sm:w-4 ${
         shown ? 'translate-y-0 opacity-100 hover:-translate-y-0.5' : 'pointer-events-none translate-y-2 opacity-0'
       }`}
     >

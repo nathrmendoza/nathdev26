@@ -1,1 +1,34 @@
-{}
+{
+  "/images/ear-map.webp": {
+    "width": 1440,
+    "height": 713
+  },
+  "/images/ear-map2.webp": {
+    "width": 1440,
+    "height": 713
+  },
+  "/images/glasshouse-sample.webp": {
+    "width": 1440,
+    "height": 717
+  },
+  "/images/tepae-sample.webp": {
+    "width": 1440,
+    "height": 709
+  },
+  "/images/thebiggrin-sample.webp": {
+    "width": 1440,
+    "height": 712
+  },
+  "/images/tinshed-sample.webp": {
+    "width": 1440,
+    "height": 740
+  },
+  "/images/wes-map.webp": {
+    "width": 1440,
+    "height": 713
+  },
+  "/images/wes-map2.webp": {
+    "width": 1440,
+    "height": 713
+  }
+}

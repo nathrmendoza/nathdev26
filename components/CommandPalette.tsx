@@ -218,7 +218,9 @@ export default function CommandPalette({
           type="button"
           data-dither-mask
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 left-12 z-40 font-mono text-[11px] tracking-wide text-ink-faint uppercase transition-colors hover:text-ink"
+          // bottom-6 + leading-4 (one h-4 line): centres on the footer's row at
+          // the bottom of the page, level with its icons and BackToTop.
+          className="fixed bottom-6 left-12 z-40 font-mono text-[11px] leading-4 tracking-wide text-ink-faint uppercase transition-colors hover:text-ink"
         >
           Press <span className="text-accent">{shortcutKey}</span> or{' '}
           <span className="text-accent">

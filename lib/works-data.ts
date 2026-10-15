@@ -5,8 +5,12 @@
  * screenshots before shipping. `media` feeds the project page's carousel
  * (components/WorkCarousel.tsx), in order. Each item shows at its own
  * natural height, so mix freely: full-page captures, single-viewport shots,
- * or a tight crop of one feature. Export at a consistent width (1440px is a
- * good default) so they read as the same site.
+ * or a tight crop of one feature.
+ *
+ * Images: drop originals in images/works/<slug>/ (name thumbnails thumb.*)
+ * and run `npm run images` -- it resizes, converts to WebP, and writes
+ * public/works/<slug>/<name>.webp, which is the path to use here. See
+ * scripts/optimize-images.mjs.
  */
 
 export interface WorkMedia {

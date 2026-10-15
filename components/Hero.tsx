@@ -11,18 +11,11 @@
 
 import { useState } from 'react';
 import Hero3DText from '@/components/Hero3DText';
-
-function reducedMotion() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
+import { scrollToId } from '@/lib/scroll-to';
+import { ArrowDownIcon } from '@/components/icons';
 
 function ScrollCue() {
-  const scrollToNext = () => {
-    const next = document.getElementById('hero')?.nextElementSibling;
-    const behavior: ScrollBehavior = reducedMotion() ? 'auto' : 'smooth';
-    if (next) next.scrollIntoView({ behavior, block: 'start' });
-    else window.scrollBy({ top: window.innerHeight, behavior });
-  };
+  const scrollToNext = () => scrollToId('background');
 
   return (
     <button
@@ -30,12 +23,10 @@ function ScrollCue() {
       onClick={scrollToNext}
       aria-label="Scroll down"
       data-dither-mask
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 text-ink-dim transition-colors motion-safe:animate-bounce-soft hover:text-accent"
+      // h-4 w-4 + the shared icon: same size and stroke as BackToTop's arrow.
+      className="absolute bottom-8 left-1/2 block h-4 w-4 -translate-x-1/2 text-ink-dim transition-colors motion-safe:animate-bounce-soft hover:text-accent"
     >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 4v16" />
-        <path d="m5 13 7 7 7-7" />
-      </svg>
+      <ArrowDownIcon />
     </button>
   );
 }

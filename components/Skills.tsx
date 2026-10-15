@@ -143,7 +143,7 @@ export default function Skills() {
   const hasAnySkillMatch = ALL_SKILLS.some((s) => matchesSkillQuery(s.name));
 
   return (
-    <section className="px-6 py-32 sm:px-12 sm:py-40">
+    <section id="stack" className="px-6 py-32 sm:px-12 sm:py-40">
       <div className="mx-auto max-w-4xl">
         <h2 className="mb-2">Tech Stack</h2>
         <p className="mb-10 max-w-xl text-ink-dim">Search whatever&rsquo;s in the job spec -- matches light up.</p>

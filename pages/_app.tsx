@@ -1,5 +1,6 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import Router from "next/router";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { Archivo, JetBrains_Mono } from "next/font/google";
@@ -10,9 +11,11 @@ import DitherBackground, {
 import SplashCurtain from "@/components/SplashCurtain";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BackToTop from "@/components/BackToTop";
 import PageTransition from "@/components/PageTransition";
 import CommandPalette, { type Command, type Route } from "@/components/CommandPalette";
 import { useDitherControlsUnlocked } from "@/lib/useDitherControlsUnlock";
+import { scrollToId } from "@/lib/scroll-to";
 
 const archivo = Archivo({
   variable: "--font-display",
@@ -33,9 +36,10 @@ const DitherControls = dynamic(() => import("@/components/DitherControls"), {
 // Pages the command palette's `cd` can reach -- kept in sync with Header's nav.
 const ROUTES: Route[] = [
   { name: "home", path: "/" },
-  { name: "works", path: "/works" },
-  // { name: "gallery", path: "/gallery" }, // hidden until the gallery page exists
-  { name: "contact", path: "/contact" },
+  // Hidden for launch (one-pager) -- the pages 404 until they're back:
+  // { name: "works", path: "/works" },
+  // { name: "gallery", path: "/gallery" },
+  // { name: "contact", path: "/contact" },
   { name: "styles", path: "/styles" },
 ];
 
@@ -80,8 +84,11 @@ const COMMANDS: Command[] = [
     id: "sudo",
     alias: "sudo hire-me",
     description: "...worth a shot",
-    feedback: "Permission granted. (Would redirect to Contact.)",
-    run: () => {},
+    feedback: "Permission granted. Scrolling to contact...",
+    run: () => {
+      // Off the homepage (e.g. /styles), go there -- PageTransition lands on the section.
+      if (!scrollToId("contact")) Router.push("/#contact", undefined, { scroll: false });
+    },
   },
 ];
 
@@ -103,11 +110,13 @@ export default function App({ Component, pageProps }: AppProps) {
           onFirePulse={() => setPulseSignal((n) => n + 1)}
         />
       )}
-      {/* Desktop only -- the terminal assumes a keyboard. */}
-      <CommandPalette commands={COMMANDS} routes={ROUTES} user="nath" className="hidden sm:block" />
+      {/* Desktop only -- the terminal assumes a keyboard. lg, not sm: its hint
+          needs the footer's empty left column, which only exists from lg. */}
+      <CommandPalette commands={COMMANDS} routes={ROUTES} user="nath" className="hidden lg:block" />
       <Header />
       <PageTransition Component={Component} pageProps={pageProps} />
       <Footer />
+      <BackToTop />
     </div>
   );
 }

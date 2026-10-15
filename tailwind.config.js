@@ -51,11 +51,20 @@ module.exports = {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(6px)' },
         },
+        // One letter's hop in the header logo's hover wave -- a jump, a
+        // small rebound, then still. Staggered per letter in Header.tsx.
+        hop: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '30%': { transform: 'translateY(-0.18em)' },
+          '55%': { transform: 'translateY(0)' },
+          '72%': { transform: 'translateY(-0.04em)' },
+        },
       },
       animation: {
         marquee: 'marquee 60s linear infinite',
         'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
         'bounce-soft': 'bounceSoft 2.2s ease-in-out infinite',
+        hop: 'hop 0.5s cubic-bezier(0.33, 1, 0.68, 1) both',
       },
     },
   },

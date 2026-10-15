@@ -1,5 +1,7 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import WorkCarousel from "@/components/WorkCarousel";
+import DitherLinkButton from "@/components/DitherLinkButton";
+import { ExternalLinkIcon } from "@/components/icons";
 import { WORKS, getWorkBySlug, type WorkProject } from "@/lib/works-data";
 
 interface Props {
@@ -28,6 +30,23 @@ export default function WorkDetailPage({ project }: Props) {
               </span>
             ))}
           </div>
+
+          {project.site && (
+            <DitherLinkButton
+              href={project.site}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-10 px-7 py-4 text-[16px] tracking-[0.14em] uppercase"
+            >
+              <span className="inline-flex items-center gap-3">
+                Visit Site
+                <span className="h-[1.1em] w-[1.1em]">
+                  <ExternalLinkIcon />
+                </span>
+                <span className="sr-only">(opens in a new tab)</span>
+              </span>
+            </DitherLinkButton>
+          )}
         </div>
 
         {project.media.length > 0 && <WorkCarousel media={project.media} />}
@@ -36,12 +55,17 @@ export default function WorkDetailPage({ project }: Props) {
   );
 }
 
+// Hidden for launch (one-pager): every project 404s. Set false to bring
+// them back, along with the Works links in Header NAV_ITEMS and _app ROUTES.
+const HIDDEN = true;
+
 export const getStaticPaths: GetStaticPaths = () => ({
-  paths: WORKS.map((w) => ({ params: { slug: w.slug } })),
+  paths: HIDDEN ? [] : WORKS.map((w) => ({ params: { slug: w.slug } })),
   fallback: false,
 });
 
 export const getStaticProps: GetStaticProps<Props> = ({ params }) => {
+  if (HIDDEN) return { notFound: true };
   const project = getWorkBySlug(params!.slug as string);
   if (!project) return { notFound: true };
   return { props: { project } };

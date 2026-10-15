@@ -33,6 +33,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { getBayerMatrix } from '@/lib/ordered-noise';
+import { imageSize } from '@/lib/image-sizes';
 import { getLenis } from '@/lib/lenis';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons';
 import type { WorkMedia } from '@/lib/works-data';
@@ -495,22 +496,32 @@ export default function WorkCarousel({ media }: { media: WorkMedia[] }) {
         {/* Every image rendered once, up front -- transitions only restyle
             them. Classes set the initial rest state; inline styles written
             during transitions take over from there. */}
-        {media.map((m, i) => (
-          // eslint-disable-next-line @next/next/no-img-element -- screenshots vary in height; a plain img keeps natural aspect without hardcoding dimensions
-          <img
-            key={m.src}
-            ref={(el) => {
-              imgRefs.current[i] = el;
-            }}
-            src={m.src}
-            alt={i === index ? m.alt : ''}
-            aria-hidden={i === index ? undefined : true}
-            draggable={false}
-            className={`block h-auto w-full ${
-              i === 0 ? 'relative' : 'invisible absolute top-0 left-0'
-            }`}
-          />
-        ))}
+        {media.map((m, i) => {
+          // From the `npm run images` manifest. With these, an image that
+          // hasn't loaded yet still lays out at its true aspect ratio, so
+          // heightOf() is right before the pixels arrive.
+          const size = imageSize(m.src);
+          return (
+            // eslint-disable-next-line @next/next/no-img-element -- screenshots vary in height; a plain img keeps natural aspect, and the files are pre-optimised (scripts/optimize-images.mjs)
+            <img
+              key={m.src}
+              ref={(el) => {
+                imgRefs.current[i] = el;
+              }}
+              src={m.src}
+              width={size?.width}
+              height={size?.height}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              alt={i === index ? m.alt : ''}
+              aria-hidden={i === index ? undefined : true}
+              draggable={false}
+              className={`block h-auto w-full ${
+                i === 0 ? 'relative' : 'invisible absolute top-0 left-0'
+              }`}
+            />
+          );
+        })}
       </div>
 
       {multiple && (

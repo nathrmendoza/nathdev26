@@ -126,7 +126,7 @@ export default function Experience() {
   const lastLit = progress >= (dotFractions[dotFractions.length - 1] ?? 1);
 
   return (
-    <section className="px-6 py-32 sm:px-12 sm:py-40">
+    <section id="background" className="px-6 py-32 sm:px-12 sm:py-40">
       <div className="mx-auto max-w-4xl">
         <h2 className="mb-20 flex flex-wrap items-baseline gap-4">
           <DigitCounter value={years} />

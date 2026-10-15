@@ -7,6 +7,10 @@
  * see MobileNav). Mounted once in _app.tsx, outside PageTransition, so it
  * stays put across navigation.
  *
+ * Hovering the logo sends a wave through it: each letter hops in turn, left
+ * to right, like a snake. A hover mid-wave is ignored rather than
+ * restarting it, so skimming the cursor across doesn't make it stutter.
+ *
  * Plays a one-time entrance on mount: the logo slides up letter by letter,
  * then the nav reveals as if its labels were one continuous string -- first
  * every position pops in showing glitch noise, sweeping left to right, then
@@ -26,6 +30,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useInternalLinkClick } from '@/lib/useInternalLinkClick';
 import MobileNav from '@/components/MobileNav';
+import { scrollToTop } from '@/lib/scroll-to';
 
 const GLYPHS = '#%&$@*+=~/\\|<>[]{}';
 const LOGO = ['N', 'D', 'E', 'V'];
@@ -35,17 +40,19 @@ export interface NavItem {
   href: string;
 }
 
-// Shared with MobileNav. Gallery is hidden until its page exists -- restore
-// it here and in pages/_app.tsx ROUTES.
+// Shared with MobileNav. One-pager for launch: each item smooth-scrolls to
+// a section on `/` (ids on Experience, Skills, ContactSection). The Works
+// and Contact pages are hidden (they 404) -- restore their links here and
+// in pages/_app.tsx ROUTES when they come back.
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Works', href: '/works' },
-  // { label: 'Gallery', href: '/gallery' },
-  { label: 'Contact', href: '/contact' },
+  { label: 'Background', href: '/#background' },
+  { label: 'The Stack', href: '/#stack' },
+  { label: 'Contact', href: '/#contact' },
 ];
 
 const SPLASH_CLEAR = 1600;
 const LOGO_STAGGER = 70;
+const HOP_STAGGER = 60;
 const LOGO_SETTLE = SPLASH_CLEAR + LOGO.length * LOGO_STAGGER + 300;
 const NAV_START = LOGO_SETTLE + 150;
 
@@ -220,6 +227,16 @@ export default function Header() {
   const [navOn, setNavOn] = useState(false);
   const [visible, setVisible] = useState(true);
   const headerRef = useRef<HTMLElement>(null);
+  // Bumped per hover wave -- keys the letters' inner spans, so each bump
+  // remounts them and replays the animation from the start.
+  const [hopWave, setHopWave] = useState(0);
+  const hopping = useRef(false);
+
+  const startHop = () => {
+    if (!logoOn || hopping.current || reducedMotion()) return;
+    hopping.current = true;
+    setHopWave((n) => n + 1);
+  };
 
   useEffect(() => {
     const reduced = reducedMotion();
@@ -295,7 +312,20 @@ export default function Header() {
         visible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
-      <Link href="/" scroll={false} className="block shrink-0 no-underline" aria-label="NDEV -- home">
+      <Link
+        href="/"
+        scroll={false}
+        // Already home: the logo is a back-to-top instead of a no-op navigation.
+        onClick={(e) => {
+          if (pathname !== '/' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          scrollToTop();
+        }}
+        onPointerEnter={startHop}
+        onFocus={startHop}
+        className="block shrink-0 no-underline"
+        aria-label="NDEV -- home"
+      >
         <span className="flex font-display text-h2 font-extrabold tracking-tight text-ink uppercase">
           {LOGO.map((ch, i) => (
             <span
@@ -305,7 +335,22 @@ export default function Header() {
               }`}
               style={{ transitionDelay: `${i * LOGO_STAGGER}ms` }}
             >
-              {ch}
+              {/* Inner span carries the hop, so its transform never fights
+                  the outer span's entrance transition. */}
+              <span
+                key={hopWave}
+                className={`inline-block ${hopWave ? 'animate-hop' : ''}`}
+                style={hopWave ? { animationDelay: `${i * HOP_STAGGER}ms` } : undefined}
+                onAnimationEnd={
+                  i === LOGO.length - 1
+                    ? () => {
+                        hopping.current = false;
+                      }
+                    : undefined
+                }
+              >
+                {ch}
+              </span>
             </span>
           ))}
         </span>

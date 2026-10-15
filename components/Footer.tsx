@@ -3,9 +3,10 @@
 /**
  * Footer.tsx
  *
- * One straight line, then a single row: identity/location/local time on the
- * left, contact/back-to-top icons on the right. Mounted once in _app.tsx so
- * it doesn't remount per route.
+ * One straight line, then a single row: identity, local time and location
+ * centred and dot-separated, contact icons on the right. Mounted once in _app.tsx so it doesn't
+ * remount per route. (Back-to-top used to sit at the end of the icon row;
+ * it's BackToTop now, pinned to the viewport in the same spot.)
  *
  * Plays its entrance once, the first time it scrolls into view (not on
  * mount, unlike Header): the divider line grows in from the left, then the
@@ -18,8 +19,8 @@
  * visual state is a pure function of its position against the current tick.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { GithubIcon, LinkedinIcon, MailIcon, ArrowUpIcon } from '@/components/icons';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
+import { GithubIcon, LinkedinIcon, MailIcon } from '@/components/icons';
 
 const GLYPHS = '#%&$@*+=~/\\|<>[]{}';
 const SWEEP_DURATION_MS = 1400;
@@ -127,6 +128,8 @@ interface SocialLink {
 }
 
 const LEFT_LABELS = ['Nathan — Web Developer', 'Christchurch based'];
+// The live clock sits between the two labels, dot-separated.
+const CLOCK_INDEX = 1;
 
 // Placeholders -- swap in the real GitHub/LinkedIn URLs before shipping.
 const SOCIAL_LINKS: SocialLink[] = [
@@ -185,7 +188,7 @@ export default function Footer() {
     return () => observer.disconnect();
   }, []);
 
-  const leftLabels = [...LEFT_LABELS, clockSnapshot];
+  const leftLabels = [LEFT_LABELS[0], clockSnapshot, LEFT_LABELS[1]];
   const leftOffsets = offsetsFor(leftLabels);
   const tickLeft = useSweepTick(sweepOn, leftOffsets.total);
   const leftDone = tickLeft >= leftOffsets.total * 2;
@@ -209,38 +212,51 @@ export default function Footer() {
     return () => observer.disconnect();
   }, []);
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
-
   return (
-    <footer ref={rootRef} data-dither-mask className="relative z-20 px-6 py-6 sm:px-12 sm:py-8">
+    <footer ref={rootRef} data-dither-mask className="relative z-20 px-6 py-6 sm:px-12 sm:pt-8">
       <div
         className={`h-px w-full origin-left bg-line-lit transition-transform duration-700 ease-out ${
           lineOn ? 'scale-x-100' : 'scale-x-0'
         }`}
       />
 
-      <div className="mt-6 flex flex-col flex-wrap items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="flex flex-col gap-1.5 font-mono text-[11px] tracking-[0.1em] text-ink-dim uppercase sm:flex-row sm:items-center sm:gap-8">
-          {LEFT_LABELS.map((label, i) => (
-            <span key={label}>
-              <SweepChars label={label} charOffset={leftOffsets.offsets[i]} totalChars={leftOffsets.total} tick={tickLeft} />
-            </span>
+      {/* lg+: three columns, text truly centred. The empty left one is where
+          CommandPalette's fixed hint lands at the bottom of the page; the
+          icons' lg:pr-10 (gap-6 + the h-4 arrow) keeps the slot BackToTop
+          lands in clear. Everything centres on the same line: pb-6 + half
+          the h-4 icons, which is where the hint and arrow are pinned too.
+          Below lg: stacked and centred, no hint, arrow off to the right. */}
+      <div className="mt-6 flex flex-col items-center gap-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
+        <div aria-hidden="true" className="hidden lg:block" />
+
+        <div className="flex flex-col items-center gap-1.5 font-mono text-[11px] tracking-[0.1em] text-ink-dim uppercase sm:flex-row sm:gap-6">
+          {leftLabels.map((label, i) => (
+            <Fragment key={i}>
+              {i > 0 && (
+                <span
+                  aria-hidden="true"
+                  className={`hidden h-1 w-1 shrink-0 rounded-full bg-ink-faint transition-opacity duration-400 sm:block ${
+                    tickLeft > leftOffsets.offsets[i] ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              )}
+              <span className={i === CLOCK_INDEX ? 'tabular-nums' : undefined}>
+                {i === CLOCK_INDEX && leftDone ? (
+                  liveClock
+                ) : (
+                  <SweepChars
+                    label={label}
+                    charOffset={leftOffsets.offsets[i]}
+                    totalChars={leftOffsets.total}
+                    tick={tickLeft}
+                  />
+                )}
+              </span>
+            </Fragment>
           ))}
-          <span className="tabular-nums">
-            {leftDone ? (
-              liveClock
-            ) : (
-              <SweepChars
-                label={clockSnapshot}
-                charOffset={leftOffsets.offsets[LEFT_LABELS.length]}
-                totalChars={leftOffsets.total}
-                tick={tickLeft}
-              />
-            )}
-          </span>
         </div>
 
-        <nav aria-label="Footer" className="flex items-center gap-5 sm:gap-6">
+        <nav aria-label="Footer" className="flex items-center gap-5 sm:gap-6 lg:justify-self-end lg:pr-10">
           {SOCIAL_LINKS.map((link, i) => (
             <IconReveal key={link.href} on={sweepOn} index={i}>
               <a
@@ -255,17 +271,6 @@ export default function Footer() {
               </a>
             </IconReveal>
           ))}
-          <IconReveal on={sweepOn} index={SOCIAL_LINKS.length}>
-            <button
-              type="button"
-              onClick={scrollToTop}
-              aria-label="Back to top"
-              data-dither-mask
-              className="block h-4 w-4 cursor-pointer text-ink transition-all hover:-translate-y-0.5 hover:text-accent"
-            >
-              <ArrowUpIcon />
-            </button>
-          </IconReveal>
         </nav>
       </div>
     </footer>

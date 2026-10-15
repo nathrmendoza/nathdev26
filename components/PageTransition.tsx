@@ -14,7 +14,8 @@
  * that they must navigate with `scroll: false` (see useInternalLinkClick).
  * Next's own scroll-to-top would otherwise jerk the outgoing page to the
  * top mid-dissolve, so scrolling happens here instead, at the swap: to the
- * top on a fresh navigation, back to where you were on back/forward.
+ * top on a fresh navigation (or the #section, for a `/#id` link), back to
+ * where you were on back/forward.
  *
  * Navigating again mid-exit doesn't queue anything: the swap just lands on
  * whichever route is newest. Navigating back to the page still on screen
@@ -128,7 +129,14 @@ export default function PageTransition({ Component, pageProps }: Pick<AppProps, 
     if (shown.key === prevKey.current) return;
     prevKey.current = shown.key;
 
-    const y = isPop.current ? (scrollPositions.current.get(shown.key) ?? 0) : 0;
+    const section = !isPop.current && window.location.hash
+      ? document.getElementById(decodeURIComponent(window.location.hash.slice(1)))
+      : null;
+    const y = section
+      ? section.getBoundingClientRect().top + window.scrollY
+      : isPop.current
+        ? (scrollPositions.current.get(shown.key) ?? 0)
+        : 0;
     isPop.current = false;
     const lenis = getLenis();
     if (lenis) {

@@ -3,18 +3,16 @@
 /**
  * Header.tsx
  *
- * Centred wordmark with nav clustered on either side of it, rather than the
- * standard logo-left/links-right split. Mounted once in _app.tsx, outside
- * the per-route fade-in wrapper, so it stays put across navigation.
+ * Wordmark on the left, nav on the right (a burger + dropdown below `sm`,
+ * see MobileNav). Mounted once in _app.tsx, outside PageTransition, so it
+ * stays put across navigation.
  *
  * Plays a one-time entrance on mount: the logo slides up letter by letter,
- * then each nav group reveals as if its two labels were one continuous
- * string -- first every position pops in showing glitch noise (sweeping
- * from the end of the string nearest the logo outward), then a second
- * sweep in the same order resolves each position to its real character.
- * The right group sweeps the mirror direction of the left. Doesn't replay
- * on client-side route changes since this component doesn't remount for
- * those.
+ * then the nav reveals as if its labels were one continuous string -- first
+ * every position pops in showing glitch noise, sweeping left to right, then
+ * a second sweep in the same order resolves each position to its real
+ * character. Doesn't replay on client-side route changes since this
+ * component doesn't remount for those.
  *
  * Sticky, but not simply always-on-screen: while scrollY is still within
  * the header's own height it sits in normal flow. Past that, it stays
@@ -27,22 +25,22 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useInternalLinkClick } from '@/lib/useInternalLinkClick';
-import MobileNavDial from '@/components/MobileNavDial';
+import MobileNav from '@/components/MobileNav';
 
 const GLYPHS = '#%&$@*+=~/\\|<>[]{}';
 const LOGO = ['N', 'D', 'E', 'V'];
 
-interface NavItem {
+export interface NavItem {
   label: string;
   href: string;
 }
 
-const LEFT_NAV: NavItem[] = [
+// Shared with MobileNav. Gallery is hidden until its page exists -- restore
+// it here and in pages/_app.tsx ROUTES.
+export const NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/' },
   { label: 'Works', href: '/works' },
-];
-const RIGHT_NAV: NavItem[] = [
-  { label: 'Gallery', href: '/gallery' },
+  // { label: 'Gallery', href: '/gallery' },
   { label: 'Contact', href: '/contact' },
 ];
 
@@ -59,20 +57,14 @@ function reducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** Sweep order across a group's items, treating them as one continuous
- *  string. `reverse` sweeps from the last item's last character back to the
- *  first item's first character (for the group nearest the logo on the
- *  left); forward does the mirror, first character to last (right group). */
-function buildSweepOrder(items: NavItem[], reverse: boolean) {
+/** Sweep order across the nav's items, treating them as one continuous
+ *  string: first item's first character through last item's last, left to
+ *  right. */
+function buildSweepOrder(items: NavItem[]) {
   const order: { itemIndex: number; charIndex: number }[] = [];
-  const itemIndices = reverse ? [...items.keys()].reverse() : [...items.keys()];
-  for (const itemIndex of itemIndices) {
-    const len = items[itemIndex].label.length;
-    const charIndices = reverse
-      ? Array.from({ length: len }, (_, i) => len - 1 - i)
-      : Array.from({ length: len }, (_, i) => i);
-    for (const charIndex of charIndices) order.push({ itemIndex, charIndex });
-  }
+  items.forEach((item, itemIndex) => {
+    for (let charIndex = 0; charIndex < item.label.length; charIndex++) order.push({ itemIndex, charIndex });
+  });
   return order;
 }
 
@@ -166,7 +158,7 @@ function NavAnchor({
       onPointerEnter={hoverKick}
       data-dither-mask
       aria-label={item.label}
-      className={`font-mono text-[13px] tracking-[0.14em] uppercase no-underline transition-colors ${
+      className={`font-mono text-[16px] tracking-[0.14em] uppercase no-underline transition-colors ${
         active ? 'text-accent' : 'text-ink'
       }`}
     >
@@ -175,24 +167,12 @@ function NavAnchor({
   );
 }
 
-function NavGroup({
-  items,
-  reverse,
-  start,
-  pathname,
-  ariaLabel,
-}: {
-  items: NavItem[];
-  reverse: boolean;
-  start: boolean;
-  pathname: string;
-  ariaLabel: string;
-}) {
+function NavGroup({ items, start, pathname }: { items: NavItem[]; start: boolean; pathname: string }) {
   const anchors = useRef<(NavAnchorHandle | null)[]>(items.map(() => null));
 
   useEffect(() => {
     if (!start) return;
-    const order = buildSweepOrder(items, reverse);
+    const order = buildSweepOrder(items);
 
     if (reducedMotion()) {
       order.forEach(({ itemIndex, charIndex }) => anchors.current[itemIndex]?.setCharState(charIndex, 'resolved'));
@@ -216,10 +196,10 @@ function NavGroup({
     });
 
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [start, items, reverse]);
+  }, [start, items]);
 
   return (
-    <nav aria-label={ariaLabel} className="hidden items-center gap-8 sm:flex sm:gap-12">
+    <nav aria-label="Primary" className="hidden items-center gap-8 sm:flex sm:gap-12">
       {items.map((item, i) => (
         <NavAnchor
           key={item.href}
@@ -256,7 +236,11 @@ export default function Header() {
     // height, which shifts with the responsive padding and fluid type scale.
     const el = headerRef.current;
     if (!el) return;
-    const publish = () => document.documentElement.style.setProperty('--header-h', `${el.offsetHeight}px`);
+    // Unrounded (not offsetHeight): pages that size to exactly
+    // 100vh - header - footer would otherwise overflow by a sub-pixel and
+    // still show a scrollbar.
+    const publish = () =>
+      document.documentElement.style.setProperty('--header-h', `${el.getBoundingClientRect().height}px`);
     publish();
     const observer = new ResizeObserver(publish);
     observer.observe(el);
@@ -307,13 +291,11 @@ export default function Header() {
     <header
       ref={headerRef}
       data-dither-mask
-      className={`sticky top-0 z-20 flex flex-wrap items-center justify-center gap-8 px-6 py-5 transition-transform duration-300 ease-out sm:gap-12 sm:py-8 ${
+      className={`sticky top-0 z-20 flex items-center justify-between gap-8 px-6 py-5 transition-transform duration-300 ease-out sm:px-12 sm:py-8 ${
         visible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
-      <NavGroup items={LEFT_NAV} reverse start={navOn} pathname={pathname} ariaLabel="Primary" />
-
-      <Link href="/" className="block shrink-0 no-underline" aria-label="NDEV -- home">
+      <Link href="/" scroll={false} className="block shrink-0 no-underline" aria-label="NDEV -- home">
         <span className="flex font-display text-h2 font-extrabold tracking-tight text-ink uppercase">
           {LOGO.map((ch, i) => (
             <span
@@ -329,9 +311,9 @@ export default function Header() {
         </span>
       </Link>
 
-      <NavGroup items={RIGHT_NAV} reverse={false} start={navOn} pathname={pathname} ariaLabel="Secondary" />
+      <NavGroup items={NAV_ITEMS} start={navOn} pathname={pathname} />
 
-      <MobileNavDial />
+      <MobileNav items={NAV_ITEMS} pathname={pathname} revealed={navOn} hidden={!visible} />
     </header>
   );
 }

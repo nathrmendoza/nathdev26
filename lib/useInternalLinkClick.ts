@@ -3,7 +3,11 @@ import type { MouseEvent } from 'react';
 
 /** Intercepts a plain left-click on an internal (`/`-prefixed) href to route
  *  client-side instead of a full reload -- cmd/ctrl/middle-click and
- *  target="_blank" still fall through to native browser handling. */
+ *  target="_blank" still fall through to native browser handling.
+ *
+ *  Every client-side navigation passes `scroll: false` (`scroll={false}` on
+ *  next/link): PageTransition scrolls at the swap instead, once the
+ *  outgoing page has dissolved. */
 export function useInternalLinkClick(href?: string, target?: string) {
   const router = useRouter();
   return (e: MouseEvent<HTMLAnchorElement>) => {
@@ -18,7 +22,7 @@ export function useInternalLinkClick(href?: string, target?: string) {
       !e.altKey
     ) {
       e.preventDefault();
-      router.push(href);
+      router.push(href, undefined, { scroll: false });
     }
   };
 }

@@ -196,6 +196,19 @@ export default function Footer() {
     return () => window.clearInterval(id);
   }, [leftDone]);
 
+  useEffect(() => {
+    // Published like Header's --header-h, so pages meant to fit one screen
+    // can size to 100vh minus both instead of overflowing by the footer.
+    const el = rootRef.current;
+    if (!el) return;
+    const publish = () =>
+      document.documentElement.style.setProperty('--footer-h', `${el.getBoundingClientRect().height}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
 
   return (

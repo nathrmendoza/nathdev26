@@ -4,21 +4,30 @@
  * ContactForm.tsx
  *
  * Inputs stay plain -- dither texture behind live text fights legibility.
- * On submit the whole thing dissolves (noise-ordered, mode 'dissolve'),
- * content swaps underneath, then the same surface clears in reverse.
+ * Once /api/contact confirms the send, the form dissolves out to
+ * transparent (noise-ordered, mode 'dissolve', applied as a mask so the live
+ * background shows through rather than a solid block), content swaps, then
+ * the new content dissolves in through the same surface. A failed send never dissolves -- the form and
+ * everything typed into it stay put, with the error under the fields.
+ *
+ * Validation rules live in lib/contact-schema.ts, shared with the API route.
  */
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { DitherSurface, type RGB } from '@/lib/dither-surface';
+import { DitherSurface } from '@/lib/dither-surface';
 import DitherButton from './DitherButton';
+import {
+  HONEYPOT_FIELD,
+  contactSchema,
+  fieldErrors,
+  type ContactField,
+  type ContactInput,
+} from '@/lib/contact-schema';
+import type { ContactResponse } from '@/pages/api/contact';
 
-const GROUND: RGB = [13, 15, 16];
+type FieldKey = ContactField;
 
-type FieldKey = 'name' | 'email' | 'phone' | 'subject' | 'message';
-// Phone is the one optional field -- email already covers "how to reach you".
-const OPTIONAL_FIELDS: FieldKey[] = ['phone'];
-
-const EMPTY_VALUES: Record<FieldKey, string> = { name: '', email: '', phone: '', subject: '', message: '' };
+const EMPTY_VALUES: ContactInput = { name: '', email: '', phone: '', subject: '', message: '' };
 const EMPTY_ERRORS: Record<FieldKey, string> = { name: '', email: '', phone: '', subject: '', message: '' };
 
 const prefersReducedMotion = () =>
@@ -78,16 +87,18 @@ export default function ContactForm() {
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [focused, setFocused] = useState<FieldKey | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
+  const [honeypot, setHoneypot] = useState('');
 
   useEffect(() => {
     const host = shellRef.current;
     if (!host) return;
     const veil = new DitherSurface(host, {
       mode: 'dissolve',
-      rgb: GROUND,
+      output: 'mask',
       fill: 1,
       speed: 7,
-      className: 'dither-canvas dither-veil',
     });
     veilRef.current = veil;
     return () => {
@@ -109,32 +120,41 @@ export default function ContactForm() {
     setErrors((s) => (s[key] ? { ...s, [key]: '' } : s));
   };
 
-  const validate = () => {
-    const next = { ...EMPTY_ERRORS };
-    let ok = true;
-    (Object.keys(values) as FieldKey[]).forEach((key) => {
-      const v = values[key].trim();
-      if (!v) {
-        if (!OPTIONAL_FIELDS.includes(key)) {
-          next[key] = 'Required';
-          ok = false;
-          shake(key);
-        }
-        return;
-      }
-      if (key === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-        next[key] = 'That address doesn’t look right';
-        ok = false;
-        shake(key);
-      }
-    });
+  const showErrors = (next: Record<FieldKey, string>) => {
     setErrors(next);
-    return ok;
+    (Object.keys(next) as FieldKey[]).forEach((key) => next[key] && shake(key));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const validate = () => {
+    const result = contactSchema.safeParse(values);
+    showErrors(result.success ? EMPTY_ERRORS : fieldErrors(result.error));
+    return result.success;
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (sending || !validate()) return;
+
+    setSending(true);
+    setSendError('');
+    let data: ContactResponse;
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...values, [HONEYPOT_FIELD]: honeypot }),
+      });
+      data = await res.json();
+    } catch {
+      data = { ok: false, error: 'Couldn’t reach the server -- check your connection and try again.' };
+    }
+    setSending(false);
+
+    if (!data.ok) {
+      setSendError(data.error);
+      if (data.fieldErrors) showErrors(data.fieldErrors);
+      return;
+    }
 
     const hold = prefersReducedMotion() ? 0 : 520;
     veilRef.current?.to(1);
@@ -152,6 +172,7 @@ export default function ContactForm() {
       setSubmitted(false);
       setValues(EMPTY_VALUES);
       setErrors(EMPTY_ERRORS);
+      setSendError('');
       veilRef.current?.resize();
       veilRef.current?.to(0);
     }, hold);
@@ -161,6 +182,20 @@ export default function ContactForm() {
     <div ref={shellRef} data-dither-mask className="dither-host relative">
       {!submitted && (
         <form onSubmit={handleSubmit} noValidate className="grid">
+          {/* Honeypot -- off-screen and out of the tab order, so only bots fill it. */}
+          <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+            <label htmlFor="cf-website">Website</label>
+            <input
+              id="cf-website"
+              name={HONEYPOT_FIELD}
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
+
           <Field
             fieldRef={(el) => {
               fieldRefs.current.name = el;
@@ -274,11 +309,20 @@ export default function ContactForm() {
           </Field>
 
           <div className="flex flex-wrap items-center justify-between gap-3.5 border-t border-line pt-4">
-            <span className="text-[10px] tracking-wide text-ink-faint">
-              Prototype — nothing is sent anywhere.
-            </span>
-            <DitherButton type="submit" className="px-5 py-3.5 text-[11px] tracking-[0.14em] uppercase">
-              Send it
+            {sendError ? (
+              <span role="alert" className="text-[10px] tracking-wide text-warn">
+                {sendError}
+              </span>
+            ) : (
+              <span className="text-[10px] tracking-wide text-ink-faint">Goes straight to my inbox.</span>
+            )}
+            <DitherButton
+              type="submit"
+              disabled={sending}
+              aria-busy={sending}
+              className="px-5 py-3.5 text-[11px] tracking-[0.14em] uppercase disabled:cursor-wait disabled:opacity-60"
+            >
+              {sending ? 'Sending…' : 'Send it'}
             </DitherButton>
           </div>
         </form>
@@ -290,18 +334,18 @@ export default function ContactForm() {
             className="font-display text-xl tracking-wide uppercase"
             style={{ fontVariationSettings: '"wdth" 108, "wght" 700' }}
           >
-            Message away
+            MESSAGE SENT
           </h3>
           <p className="text-xs leading-relaxed text-ink-dim">
-            The form dissolved through the dither, swapped underneath, and resolved back. Two
-            passes of the same surface, one covering and one clearing.
+            Thanks{values.name.trim() ? `, ${values.name.trim().split(/\s+/)[0]}` : ''} — it’s in my
+            inbox. I’ll get back to you soon.
           </p>
           <button
             type="button"
             onClick={handleReset}
             className="mt-2 rounded-sm border border-line-lit px-4 py-2.5 font-mono text-[10px] tracking-wide text-ink uppercase hover:border-ink-faint"
           >
-            Run it again
+            Send another
           </button>
         </div>
       )}

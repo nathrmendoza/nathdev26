@@ -4,12 +4,13 @@
  * SplashCurtain.tsx
  *
  * Full-viewport dither reveal on first paint -- same DitherSurface engine
- * as the ContactForm veil, radial mode. Starts fully covering with no
+ * as ContactForm's dissolve and PageTransition, radial mode. Starts fully covering with no
  * fade-in, then clears after `hold`. Also masks the WebGL background's own
  * shader-compile flicker.
  *
  * Mounted once in _app.tsx: plays on every full page load, not on
- * client-side route changes (that's DitherBackground's pulse instead).
+ * client-side route changes (that's PageTransition, plus DitherBackground's
+ * pulse).
  */
 
 import { useEffect, useRef } from 'react';

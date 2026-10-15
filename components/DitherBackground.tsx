@@ -20,6 +20,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Lenis from 'lenis';
+import { setLenis } from '@/lib/lenis';
 
 export interface DitherBackgroundConfig {
   /** CSS pixels per buffer pixel. THE performance dial: the buffer is the
@@ -234,6 +235,7 @@ export default function DitherBackground({
 
     // autoRaf off: driven from this component's own loop below instead.
     const lenis = new Lenis({ autoRaf: false });
+    setLenis(lenis);
 
     const gl = canvas.getContext('webgl2', {
       antialias: false,
@@ -395,6 +397,7 @@ export default function DitherBackground({
       document.removeEventListener('visibilitychange', onVis);
       gl?.getExtension('WEBGL_lose_context')?.loseContext();
       lenis.destroy();
+      setLenis(null);
     };
   }, []);
 

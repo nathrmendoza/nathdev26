@@ -16,6 +16,14 @@
  * threshold as the rest of the kit (lib/ordered-noise.ts), so the letters'
  * flat and bevelled faces pick up the site's halftone shading instead of a
  * generic 3D-software gradient.
+ *
+ * Intro, once per mount: the letters develop in through that same Bayer
+ * threshold (mixed with value noise so it resolves in clumps, not a grid)
+ * while the geometry pushes out from flat to full depth and swings in from
+ * a steep angle. Every intro value lands exactly on the resting state --
+ * full depth, zero offset, nothing discarded -- so once it settles the text
+ * looks and tracks the cursor exactly as it would without it. Timed to the
+ * SplashCurtain on a full load; near-immediate on client-side navigation.
  */
 
 import { useEffect, useRef } from 'react';
@@ -38,6 +46,31 @@ const TEXT = '200 / OK';
 const MAX_ROTATION_DEG = 15;
 const EASE = 0.07;
 
+// Intro timing. INTRO_DELAY_FIRST waits out SplashCurtain's hold (700ms)
+// and most of its dissolve, so the intro plays on a clear screen instead of
+// half-hidden under the curtain.
+const INTRO_DELAY_FIRST = 1400;
+const INTRO_DELAY_ROUTE = 150;
+const INTRO_MS = 1400;
+/** Fraction of the intro the dither develop takes -- finishes before the
+ *  depth/rotation settle, so the last stretch is purely the 3D landing. */
+const DEVELOP_END = 0.8;
+/** Fraction of the intro at which `onLanded` fires. */
+const LANDED_AT = 0.75;
+// Starting offsets, eased to 0. Kept modest: with depth also starting near
+// flat, the silhouette stays inside the camera fit computed for the resting
+// rotation range, so nothing clips mid-swing.
+const INTRO_ROT_X_DEG = 20;
+const INTRO_ROT_Y_DEG = -30;
+const INTRO_MIN_DEPTH = 0.04;
+/** CSS pixels per develop cell -- chunky like the rest of the kit's dither. */
+const DEVELOP_CELL_PX = 3;
+
+// Full load vs. client-side return to `/`. Flipped once the intro actually
+// starts playing (not on effect start), so React Strict Mode's dev-only
+// mount/unmount/mount doesn't make the first real run think it's a revisit.
+let introPlayed = false;
+
 const INK = [217 / 255, 220 / 255, 214 / 255];
 const GROUND = [13 / 255, 15 / 255, 16 / 255];
 const ACCENT = [111 / 255, 211 / 255, 196 / 255];
@@ -48,6 +81,10 @@ function reducedMotion() {
 
 function degToRad(d: number) {
   return (d * Math.PI) / 180;
+}
+
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3);
 }
 
 const VERTEX_SHADER = /* glsl */ `
@@ -64,8 +101,32 @@ const FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uGround;
   uniform vec3 uAccent;
   uniform float uBayer[64];
+  uniform float uProgress;
+  uniform float uCell;
+
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+
+  float vnoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+  }
 
   void main() {
+    // Intro develop. Skipped entirely at 1.0, so the resting render is
+    // untouched by any of this.
+    if (uProgress < 1.0) {
+      vec2 cell = floor(gl_FragCoord.xy / uCell);
+      int cx = int(mod(cell.x, 8.0));
+      int cy = int(mod(cell.y, 8.0));
+      float field = vnoise(cell * 0.15) * 0.65 + uBayer[cy * 8 + cx] * 0.35;
+      if (field >= uProgress) discard;
+    }
+
     vec3 n = normalize(vNormal);
     vec3 lightDir = normalize(vec3(-0.45, 0.55, 0.75));
     // Half-lambert, not a hard clamp to 0 -- faces angled away from the
@@ -99,8 +160,19 @@ const EXTRUDE_SETTINGS = {
   curveSegments: 10,
 };
 
-export default function Hero3DText() {
+export interface Hero3DTextProps {
+  /** Fires once, as the intro is landing -- for staging whatever comes
+   *  next (Hero's tagline). Immediately under reduced motion. */
+  onLanded?: () => void;
+}
+
+export default function Hero3DText({ onLanded }: Hero3DTextProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const onLandedRef = useRef(onLanded);
+
+  useEffect(() => {
+    onLandedRef.current = onLanded;
+  });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -128,6 +200,8 @@ export default function Hero3DText() {
         uGround: { value: GROUND },
         uAccent: { value: ACCENT },
         uBayer: { value: Array.from(bayer.data) },
+        uProgress: { value: 0 },
+        uCell: { value: DEVELOP_CELL_PX * renderer.getPixelRatio() },
       },
     });
 
@@ -209,6 +283,24 @@ export default function Hero3DText() {
       heroSection.addEventListener('pointerleave', onPointerLeave);
     }
 
+    const introStart = performance.now() + (introPlayed ? INTRO_DELAY_ROUTE : INTRO_DELAY_FIRST);
+    const introRotX = degToRad(INTRO_ROT_X_DEG);
+    const introRotY = degToRad(INTRO_ROT_Y_DEG);
+    let introDone = reduced;
+    let landed = false;
+
+    const land = () => {
+      if (landed) return;
+      landed = true;
+      onLandedRef.current?.();
+    };
+
+    if (reduced) {
+      material.uniforms.uProgress.value = 1;
+      introPlayed = true;
+      land();
+    }
+
     let frameId = 0;
     let running = true;
     const animate = () => {
@@ -216,8 +308,28 @@ export default function Hero3DText() {
       if (!reduced) {
         current.x += (target.x - current.x) * EASE;
         current.y += (target.y - current.y) * EASE;
-        group.rotation.x = current.x;
-        group.rotation.y = current.y;
+
+        // Intro offsets ride on top of the normal cursor easing rather than
+        // replacing it, so tracking is already live underneath and there's
+        // no hand-off jump when the intro ends.
+        let offX = 0;
+        let offY = 0;
+        let depth = 1;
+        if (!introDone) {
+          const t = Math.min(1, Math.max(0, (performance.now() - introStart) / INTRO_MS));
+          if (t > 0) introPlayed = true;
+          const settle = easeOutCubic(t);
+          material.uniforms.uProgress.value = t >= DEVELOP_END ? 1 : easeOutCubic(t / DEVELOP_END);
+          offX = introRotX * (1 - settle);
+          offY = introRotY * (1 - settle);
+          depth = INTRO_MIN_DEPTH + (1 - INTRO_MIN_DEPTH) * settle;
+          if (t >= LANDED_AT) land();
+          if (t >= 1) introDone = true;
+        }
+
+        group.rotation.x = current.x + offX;
+        group.rotation.y = current.y + offY;
+        group.scale.set(scale, scale, scale * depth);
       }
       renderer.render(scene, camera);
       if (!reduced) frameId = requestAnimationFrame(animate);

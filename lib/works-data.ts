@@ -2,75 +2,148 @@
  * works-data.ts
  *
  * Placeholder project content -- swap in real names, copy, tech stacks, and
- * photography before shipping. Image `size` drives the collage grid's
- * row/column span (see components/CollageGrid.tsx); DitherImage itself
- * cover-crops to whatever box that gives it, so these are about the layout
- * rhythm, not each source file's literal pixel dimensions.
+ * screenshots before shipping. `media` feeds the project page's carousel
+ * (components/WorkCarousel.tsx), in order. Each item shows at its own
+ * natural height, so mix freely: full-page captures, single-viewport shots,
+ * or a tight crop of one feature. Export at a consistent width (1440px is a
+ * good default) so they read as the same site.
  */
 
-export type ImageSize = 'tall' | 'wide' | 'square';
-
-export interface WorkImage {
+export interface WorkMedia {
   src: string;
   alt: string;
-  size: ImageSize;
+  /** Optional line shown under the image -- most useful on feature crops. */
+  caption?: string;
 }
 
 export interface WorkProject {
   slug: string;
   name: string;
+  site: string;
   description: string;
   thumbnail: string;
   techStack: string[];
-  images: WorkImage[];
+  media: WorkMedia[];
 }
 
 export const WORKS: WorkProject[] = [
   {
+    slug: 'thebiggrin',
+    name: 'The Big Grin',
+    site: 'https://thebiggrin.co.nz/',
+    description:
+      '',
+    thumbnail: '',
+    techStack: ['PHP', 'Javascript', 'Jquery', 'Sass', 'TailwindCSS', 'Craft CMS'],
+    media: []
+  },
+  {
+    slug: 'westhaven',
+    name: 'Westhaven',
+    site: 'https://westhavenrolleston.co.nz/',
+    description:
+      '',
+    thumbnail: '',
+    techStack: ['PHP', 'Javascript', 'Jquery', 'Vue JS', 'Sass', 'TailwindCSS', 'Craft CMS'],
+    media: []
+  },
+  {
+    slug: 'earlsbrook',
+    name: 'Earlsbrook',
+    site: 'https://earlsbrook.co.nz/',
+    description:
+      '',
+    thumbnail: '',
+    techStack: ['PHP', 'Javascript', 'Jquery', 'SVG.js', 'Sass', 'TailwindCSS', 'Craft CMS'],
+    media: []
+  },
+  {
+    slug: 'tinshed',
+    name: 'The Tin Shed',
+    site: 'https://thetinshed.co.nz/',
+    description:
+      '',
+    thumbnail: '',
+    techStack: ['Liquid', 'Javascript', 'Jquery', 'Shopify'],
+    media: []
+  },
+  {
+    slug: 'glasshousenz',
+    name: 'Glasshouse',
+    site: 'https://glasshousenz.com/',
+    description:
+      '',
+    thumbnail: '',
+    techStack: ['PHP', 'Javascript', 'Jquery', 'Sass', 'TailwindCSS', 'Craft CMS'],
+    media: []
+  },
+  {
+    slug: 'laika-shop',
+    name: 'Laika Shop',
+    site: '',
+    description:
+      'Built a Shopify theme for Laika, the animation studio behind Coraline. Primarily used Liquid for templating, Sass and Javascript alongside jQuery for the build.',
+    thumbnail: '',
+    techStack: ['Liquid', 'Sass', 'JavaScript', 'jQuery', 'Shopify'],
+    media: [],
+  },
+  {
+    slug: 'cobram-estate-olive-oil',
+    name: 'Cobram Estate Olive Oil',
+    site: '',
+    description:
+      'Built and managed a Shopify store for Cobram Estate Olive Oil. Built the theme, managed/configred complex solutions for subscriptions, built internal apps using remix.',
+    thumbnail: '',
+    techStack: ['Liquid', 'Sass', 'JavaScript', 'jQuery', 'React', 'Remix.js', 'jQuery', 'Shopify'],
+    media: [],
+  },
+  {
+    slug: 'bruce-insurance',
+    name: 'Bruce Insurance',
+    site: '',
+    description:
+      'Built a wordpress site for Bruce Insurance, an AU insurance company. Tech used were PHP, Sass, Javascript alongside jQuery.',
+    thumbnail: '',
+    techStack: ['PHP', 'Sass', 'Javascript', 'jQuery'],
+    media: [],
+  },
+  {
     slug: 'dither-kit',
     name: 'Dither Kit',
+    site: '',
     description:
       'A component library built around ordered dithering -- buttons, images, and backgrounds all sharing one Bayer-matrix threshold instead of blur or opacity for their transitions.',
     thumbnail: '/works/dither-kit/thumb.svg',
     techStack: ['Next.js', 'TypeScript', 'Tailwind CSS', 'WebGL', 'Canvas 2D'],
-    images: [
-      { src: '/works/dither-kit/1.svg', alt: 'Dither Kit -- mobile screen', size: 'tall' },
-      { src: '/works/dither-kit/2.svg', alt: 'Dither Kit -- wide screen', size: 'wide' },
-      { src: '/works/dither-kit/3.svg', alt: 'Dither Kit -- detail', size: 'square' },
-      { src: '/works/dither-kit/4.svg', alt: 'Dither Kit -- wide screen', size: 'wide' },
-      { src: '/works/dither-kit/5.svg', alt: 'Dither Kit -- mobile screen', size: 'tall' },
-      { src: '/works/dither-kit/6.svg', alt: 'Dither Kit -- detail', size: 'wide' },
+    media: [
+      { src: '/works/dither-kit/home.svg', alt: 'Dither Kit -- full homepage' },
+      { src: '/works/dither-kit/feature.svg', alt: 'Dither Kit -- feature detail', caption: 'Placeholder feature caption' },
     ],
   },
   {
     slug: 'nathdev26',
     name: 'nathdev26',
+    site: '',
     description:
-      'This portfolio -- a fluid-scale, terminal-flavoured site with a 3D hero, a scroll-driven timeline, and a combination-lock nav dial for mobile.',
+      'This portfolio -- a fluid-scale, terminal-flavoured site with a 3D hero, a scroll-driven timeline, and a command-line palette for getting around.',
     thumbnail: '/works/nathdev26/thumb.svg',
     techStack: ['Next.js', 'React', 'Three.js', 'Tailwind CSS', 'Lenis'],
-    images: [
-      { src: '/works/nathdev26/1.svg', alt: 'nathdev26 -- mobile screen', size: 'tall' },
-      { src: '/works/nathdev26/2.svg', alt: 'nathdev26 -- wide screen', size: 'wide' },
-      { src: '/works/nathdev26/3.svg', alt: 'nathdev26 -- detail', size: 'square' },
-      { src: '/works/nathdev26/4.svg', alt: 'nathdev26 -- mobile screen', size: 'tall' },
-      { src: '/works/nathdev26/5.svg', alt: 'nathdev26 -- wide screen', size: 'wide' },
+    media: [
+      { src: '/works/nathdev26/home.svg', alt: 'nathdev26 -- full homepage' },
+      { src: '/works/nathdev26/feature.svg', alt: 'nathdev26 -- feature detail', caption: 'Placeholder feature caption' },
     ],
   },
   {
     slug: 'pixel-lab',
     name: 'Pixel Lab',
+    site: '',
     description:
       'An experiment in ordered-noise image dissolves for a small client gallery site -- hover a thumbnail and it degrades into a halftone preview before the real photo resolves.',
     thumbnail: '/works/pixel-lab/thumb.svg',
     techStack: ['React', 'Vite', 'Sass'],
-    images: [
-      { src: '/works/pixel-lab/1.svg', alt: 'Pixel Lab -- wide screen', size: 'wide' },
-      { src: '/works/pixel-lab/2.svg', alt: 'Pixel Lab -- mobile screen', size: 'tall' },
-      { src: '/works/pixel-lab/3.svg', alt: 'Pixel Lab -- detail', size: 'square' },
-      { src: '/works/pixel-lab/4.svg', alt: 'Pixel Lab -- wide screen', size: 'wide' },
-      { src: '/works/pixel-lab/5.svg', alt: 'Pixel Lab -- mobile screen', size: 'tall' },
-      { src: '/works/pixel-lab/6.svg', alt: 'Pixel Lab -- detail', size: 'wide' },
+    media: [
+      { src: '/works/pixel-lab/home.svg', alt: 'Pixel Lab -- full homepage' },
+      { src: '/works/pixel-lab/feature.svg', alt: 'Pixel Lab -- feature detail', caption: 'Placeholder feature caption' },
     ],
   },
 ];

@@ -47,6 +47,19 @@ export interface DitherOptions {
    *  halftone, which reads badly behind text. */
   texture?: number;
 
+  /** paint - the dither is drawn as coloured pixels on a canvas over the host.
+   *  mask  - the dither becomes the host's CSS mask instead, so covered pixels
+   *          go transparent rather than coloured -- whatever sits behind the
+   *          host (the live background) shows through. `rgb` is ignored. */
+  output?: 'paint' | 'mask';
+  /** Mask mode only. What the dither buffer covers.
+   *  host     - the whole host element.
+   *  viewport - just the visible part of it; the rest is hidden for the
+   *             duration. Keeps the per-frame cost flat on a host many
+   *             screens tall (a whole page), since only the viewport's
+   *             worth of pixels is ever computed and encoded. */
+  frame?: 'host' | 'viewport';
+
   className?: string;
 }
 
@@ -63,7 +76,12 @@ const DEFAULTS = {
   turbulence: 0.55,
   feather: 0.3,
   texture: 0,
+  output: 'paint' as 'paint' | 'mask',
+  frame: 'host' as 'host' | 'viewport',
 };
+
+// Mask mode at full coverage -- nothing shows, no need to encode a frame.
+const MASK_HIDDEN = 'linear-gradient(transparent, transparent)';
 
 /* ------------------------------------------------------------------ *
  * Shared scheduler -- idle surfaces cost nothing
@@ -112,12 +130,16 @@ export class DitherSurface {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private ro: ResizeObserver;
+  private onWindowResize = () => this.resize();
   private img: ImageData | null = null;
   private w = 0;
   private h = 0;
   private t = 0;
 
   private opts: Required<Omit<DitherOptions, 'className'>>;
+  private get viewportFramed() {
+    return this.opts.output === 'mask' && this.opts.frame === 'viewport';
+  }
 
   progress = 0;
   target = 0;
@@ -134,11 +156,13 @@ export class DitherSurface {
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new Error('DitherSurface: 2D context unavailable');
     this.ctx = ctx;
-    host.appendChild(this.canvas);
+    // Mask mode never shows the canvas itself, only reads frames off it.
+    if (this.opts.output === 'paint') host.appendChild(this.canvas);
 
     this.resize();
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(host);
+    if (this.viewportFramed) window.addEventListener('resize', this.onWindowResize);
     SURFACES.push(this);
   }
 
@@ -163,7 +187,9 @@ export class DitherSurface {
   }
 
   resize() {
-    const r = this.host.getBoundingClientRect();
+    const r = this.viewportFramed
+      ? { width: window.innerWidth, height: window.innerHeight }
+      : this.host.getBoundingClientRect();
     const px = Math.max(1, this.opts.pixel);
     const w = Math.max(1, Math.round(r.width / px));
     const h = Math.max(1, Math.round(r.height / px));
@@ -206,16 +232,22 @@ export class DitherSurface {
     const p = this.progress;
     if (!this.img) return;
 
+    const { rgb, fill, output } = this.opts;
+    const asMask = output === 'mask';
+
     if (p <= 0.004) {
-      this.ctx.clearRect(0, 0, w, h);
+      if (asMask) this.setMask(null);
+      else this.ctx.clearRect(0, 0, w, h);
       return;
     }
-
-    const { rgb, fill } = this.opts;
 
     // Fully revealed and fully opaque: paint solid. Guarantees no stray unlit
     // pixels survive the dither at rest, and skips the per-pixel loop entirely.
     if (p >= 1 && fill >= 1) {
+      if (asMask) {
+        this.setMask(MASK_HIDDEN);
+        return;
+      }
       this.ctx.clearRect(0, 0, w, h);
       this.ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
       this.ctx.fillRect(0, 0, w, h);
@@ -284,18 +316,54 @@ export class DitherSurface {
         data[i] = r;
         data[i + 1] = g;
         data[i + 2] = b;
-        data[i + 3] = (q / steps) * 255;
+        // A mask shows where alpha is high, so covered pixels flip to 0.
+        const a = (q / steps) * 255;
+        data[i + 3] = asMask ? 255 - a : a;
         i += 4;
       }
     }
     this.ctx.putImageData(this.img, 0, 0);
+    if (asMask) this.setMask(`url(${this.canvas.toDataURL()})`);
+  }
+
+  /** Mask mode: apply a mask image to the host, or `null` to drop it so the
+   *  host renders untouched (and crisp) at rest. The buffer is small, so
+   *  encoding it each frame is cheap; `pixelated` keeps the grain hard-edged
+   *  as it's stretched to the host's size. */
+  private setMask(image: string | null) {
+    const style = this.host.style;
+    if (image === null) {
+      for (const prop of ['mask-image', 'mask-size', 'mask-position', 'mask-repeat', 'image-rendering']) {
+        style.removeProperty(prop);
+        style.removeProperty(`-webkit-${prop}`);
+      }
+      return;
+    }
+    // Viewport frame: pin the mask to the visible window, re-read every frame
+    // so it tracks scrolling. Outside it, no-repeat leaves nothing -- hidden.
+    let size = '100% 100%';
+    let position = '0 0';
+    if (this.viewportFramed) {
+      const r = this.host.getBoundingClientRect();
+      size = `${window.innerWidth}px ${window.innerHeight}px`;
+      position = `${-r.left}px ${-r.top}px`;
+    }
+    for (const prefix of ['', '-webkit-']) {
+      style.setProperty(`${prefix}mask-image`, image);
+      style.setProperty(`${prefix}mask-size`, size);
+      style.setProperty(`${prefix}mask-position`, position);
+      style.setProperty(`${prefix}mask-repeat`, 'no-repeat');
+    }
+    style.setProperty('image-rendering', 'pixelated');
   }
 
   /** Always call this in a React effect cleanup. */
   destroy() {
     this.ro.disconnect();
+    window.removeEventListener('resize', this.onWindowResize);
     const i = SURFACES.indexOf(this);
     if (i > -1) SURFACES.splice(i, 1);
+    if (this.opts.output === 'mask') this.setMask(null);
     this.canvas.remove();
   }
 }

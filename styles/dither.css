@@ -47,14 +47,6 @@
   transition: color 0.18s ease 0.06s;
 }
 
-/* Form dissolve veil: bleeds 1px past the host so it fully covers the edge. */
-.dither-veil {
-  inset: -1px;
-  width: calc(100% + 2px);
-  height: calc(100% + 2px);
-  z-index: 5;
-}
-
 /* Label flips to the ground colour once the fill is in. The small delay lets
    the dither get most of the way across before the text changes, which reads
    better than flipping on the first frame. */

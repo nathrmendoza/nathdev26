@@ -1,6 +1,5 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/router";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { Archivo, JetBrains_Mono } from "next/font/google";
@@ -11,6 +10,7 @@ import DitherBackground, {
 import SplashCurtain from "@/components/SplashCurtain";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PageTransition from "@/components/PageTransition";
 import CommandPalette, { type Command, type Route } from "@/components/CommandPalette";
 import { useDitherControlsUnlocked } from "@/lib/useDitherControlsUnlock";
 
@@ -34,7 +34,7 @@ const DitherControls = dynamic(() => import("@/components/DitherControls"), {
 const ROUTES: Route[] = [
   { name: "home", path: "/" },
   { name: "works", path: "/works" },
-  { name: "gallery", path: "/gallery" },
+  // { name: "gallery", path: "/gallery" }, // hidden until the gallery page exists
   { name: "contact", path: "/contact" },
   { name: "styles", path: "/styles" },
 ];
@@ -88,7 +88,6 @@ const COMMANDS: Command[] = [
 // Lives here, not in a page, so the background config and the command
 // palette's state persist across every route instead of remounting.
 export default function App({ Component, pageProps }: AppProps) {
-  const router = useRouter();
   const [config, setConfig] = useState<DitherBackgroundConfig>(DEFAULT_CONFIG);
   const [pulseSignal, setPulseSignal] = useState(0);
   const controlsUnlocked = useDitherControlsUnlocked();
@@ -104,12 +103,10 @@ export default function App({ Component, pageProps }: AppProps) {
           onFirePulse={() => setPulseSignal((n) => n + 1)}
         />
       )}
-      <CommandPalette commands={COMMANDS} routes={ROUTES} user="nath" />
+      {/* Desktop only -- the terminal assumes a keyboard. */}
+      <CommandPalette commands={COMMANDS} routes={ROUTES} user="nath" className="hidden sm:block" />
       <Header />
-      {/* key={router.asPath} forces a remount per route, so the fade-in animation replays. */}
-      <div key={router.asPath} className="relative z-1 motion-safe:animate-fade-in">
-        <Component {...pageProps} />
-      </div>
+      <PageTransition Component={Component} pageProps={pageProps} />
       <Footer />
     </div>
   );

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <rect width="1440" height="900" fill="#2E3B3A"/>
+  <rect x="0" y="0" width="1440" height="900" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <text x="720" y="400" font-family="monospace" font-size="72" fill="rgba(255,255,255,0.35)" text-anchor="middle" dominant-baseline="middle">pixel-lab</text>
+  <text x="720" y="510" font-family="monospace" font-size="48" fill="rgba(255,255,255,0.25)" text-anchor="middle" dominant-baseline="middle">feature · viewport · 1440×900</text>
+</svg>

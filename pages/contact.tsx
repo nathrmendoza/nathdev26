@@ -9,7 +9,7 @@ const LINKEDIN_URL = "https://linkedin.com";
 
 export default function ContactPage() {
   return (
-    <section className="flex min-h-[calc(100vh-var(--header-h,96px))] items-center px-6 py-16 sm:px-12">
+    <section className="flex min-h-[calc(100vh-var(--header-h,96px)-var(--footer-h,0px))] items-center px-6 py-10 sm:px-12">
       <div className="mx-auto grid w-full max-w-6xl gap-16 lg:grid-cols-2 lg:gap-24">
         <div className="flex flex-col justify-center">
           <h1 className="mb-4">Get in Touch</h1>

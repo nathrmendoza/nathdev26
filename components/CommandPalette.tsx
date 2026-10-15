@@ -146,7 +146,7 @@ export default function CommandPalette({
       const target = rest.join(' ');
       const route = routes.find((r) => r.name.toLowerCase() === target);
       if (route) {
-        router.push(route.path);
+        router.push(route.path, undefined, { scroll: false }); // PageTransition owns scroll
         next.push({ type: 'output', text: `Navigating to ${route.path}...` });
       } else {
         const available = routes.map((r) => r.name).join(', ');
@@ -218,7 +218,7 @@ export default function CommandPalette({
           type="button"
           data-dither-mask
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 left-5 z-40 font-mono text-[11px] tracking-wide text-ink-faint uppercase transition-colors hover:text-ink"
+          className="fixed bottom-5 left-12 z-40 font-mono text-[11px] tracking-wide text-ink-faint uppercase transition-colors hover:text-ink"
         >
           Press <span className="text-accent">{shortcutKey}</span> or{' '}
           <span className="text-accent">
@@ -230,7 +230,7 @@ export default function CommandPalette({
 
       <div
         data-dither-mask
-        className={`fixed bottom-12 left-5 z-40 flex w-104 max-w-[calc(100vw-40px)] flex-col overflow-hidden rounded-sm border border-line-lit bg-black/10 backdrop-blur-xl transition-all duration-200 ${
+        className={`fixed bottom-5 left-12 z-40 flex w-104 max-w-[calc(100vw-6rem)] flex-col overflow-hidden rounded-sm border border-line-lit bg-black/10 backdrop-blur-xl transition-all duration-200 ${
           open ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
         }`}
         onClick={() => inputRef.current?.focus()}
